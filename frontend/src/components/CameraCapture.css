@@ -1,0 +1,55 @@
+.camera-capture {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.video-container video {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: scaleX(-1); /* Mirror the video for better UX */
+}
+
+.video-container video.hidden {
+  display: none;
+}
+
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(220, 38, 38, 0.9);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  z-index: 10;
+}
+
+.error-message p {
+  margin: 0 0 10px 0;
+}
+
+.error-message button {
+  background: white;
+  color: #dc2626;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.error-message button:hover {
+  background: #f3f4f6;
+}
