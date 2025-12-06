@@ -1,0 +1,14 @@
+[project]
+name = "alili-backend"
+version = "1.0.0"
+description = "Yoga pose recognition backend using FastAPI and MediaPipe"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.123.10",
+    "mediapipe>=0.10.21",
+    "numpy>=1.26.4",
+    "opencv-python>=4.11.0.86",
+    "python-socketio>=5.15.0",
+    "uvicorn>=0.38.0",
+]
