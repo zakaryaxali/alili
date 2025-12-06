@@ -20,19 +20,37 @@ class YogaPoseRecognizer:
                 },
                 'tolerance': 20
             },
-            'Warrior II': {
+            'Warrior II Left': {
                 'angles': {
-                    'left_knee': 90,
-                    'right_knee': 180,
+                    'left_knee': 90,      # Front leg bent
+                    'right_knee': 180,    # Back leg straight
                     'left_shoulder': 90,
                     'right_shoulder': 90
                 },
                 'tolerance': 25
             },
-            'Tree Pose': {
+            'Warrior II Right': {
                 'angles': {
-                    'left_knee': 90,
-                    'right_knee': 180,
+                    'left_knee': 180,     # Back leg straight
+                    'right_knee': 90,     # Front leg bent
+                    'left_shoulder': 90,
+                    'right_shoulder': 90
+                },
+                'tolerance': 25
+            },
+            'Tree Pose Left': {
+                'angles': {
+                    'left_knee': 180,     # Standing leg straight
+                    'right_knee': 90,     # Raised leg bent
+                    'left_hip': 180,
+                    'right_hip': 45
+                },
+                'tolerance': 25
+            },
+            'Tree Pose Right': {
+                'angles': {
+                    'left_knee': 90,      # Raised leg bent
+                    'right_knee': 180,    # Standing leg straight
                     'left_hip': 45,
                     'right_hip': 180
                 },
@@ -59,6 +77,107 @@ class YogaPoseRecognizer:
                     'right_knee': 180
                 },
                 'tolerance': 15
+            },
+            'Supine Bound Angle': {
+                'angles': {
+                    'left_knee': 55,
+                    'right_knee': 55,
+                    'left_hip': 55,
+                    'right_hip': 55
+                },
+                'tolerance': 20
+            },
+            'Hug the Knees': {
+                'angles': {
+                    'left_knee': 50,
+                    'right_knee': 50,
+                    'left_hip': 50,
+                    'right_hip': 50
+                },
+                'tolerance': 20
+            },
+            'Easy Seat': {
+                'angles': {
+                    'left_knee': 90,
+                    'right_knee': 90,
+                    'left_hip': 90,
+                    'right_hip': 90
+                },
+                'tolerance': 25
+            },
+            'Seated Hands Behind Back Stretch': {
+                'angles': {
+                    'left_elbow': 165,
+                    'right_elbow': 165,
+                    'left_shoulder': 35,
+                    'right_shoulder': 35
+                },
+                'tolerance': 20
+            },
+            'Gomukasana Legs Fold': {
+                'angles': {
+                    'left_knee': 90,
+                    'right_knee': 90,
+                    'left_hip': 85,
+                    'right_hip': 85
+                },
+                'tolerance': 20
+            },
+            'Janu Sirsasana Twist Left': {
+                'angles': {
+                    'left_knee': 180,     # Extended leg
+                    'right_knee': 90,     # Bent leg
+                    'left_hip': 90,
+                    'right_hip': 90
+                },
+                'tolerance': 25
+            },
+            'Janu Sirsasana Twist Right': {
+                'angles': {
+                    'left_knee': 90,      # Bent leg
+                    'right_knee': 180,    # Extended leg
+                    'left_hip': 90,
+                    'right_hip': 90
+                },
+                'tolerance': 25
+            },
+            'Janu Sirsasana Revolved Left': {
+                'angles': {
+                    'left_knee': 180,     # Extended leg
+                    'right_knee': 90,     # Bent leg
+                    'left_hip': 70,
+                    'right_hip': 90
+                },
+                'tolerance': 25
+            },
+            'Janu Sirsasana Revolved Right': {
+                'angles': {
+                    'left_knee': 90,      # Bent leg
+                    'right_knee': 180,    # Extended leg
+                    'left_hip': 90,
+                    'right_hip': 70
+                },
+                'tolerance': 25
+            },
+            'Reverse Table Top': {
+                'angles': {
+                    'left_elbow': 180,
+                    'right_elbow': 180,
+                    'left_hip': 90,
+                    'right_hip': 90,
+                    'left_shoulder': 90,
+                    'right_shoulder': 90
+                },
+                'tolerance': 20
+            },
+            'Supine Bent Knees': {
+                'angles': {
+                    'left_knee': 90,
+                    'right_knee': 90,
+                    'left_hip': 90,
+                    'right_hip': 90
+                },
+                'tolerance': 20
             }
         }
 
