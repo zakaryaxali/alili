@@ -173,6 +173,10 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             <button onClick={onExit} className="control-btn exit-btn">
               Exit Session
             </button>
+            <div className="connection-status">
+              <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
+              <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+            </div>
           </div>
           <div className="info-card pose-name-card">
             <div className="info-main">
@@ -194,6 +198,12 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
                 ) : null;
               })}
             </div>
+
+            {poseResult && (
+              <div className="match-accuracy">
+                Match Accuracy: {(poseResult.confidence * 100).toFixed(1)}%
+              </div>
+            )}
 
             <div className="pose-tags">
               {currentPose.is_pain_target && (
@@ -217,10 +227,6 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
         </div>
 
         <div className="right-section">
-          <div className="feedback-content">
-            <PoseFeedback result={poseResult} isConnected={isConnected} />
-          </div>
-
           <div className="video-wrapper" ref={videoContainerRef}>
             <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
             {poseResult && poseResult.landmarks && (
@@ -230,6 +236,9 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
                 height={videoDimensions.height}
               />
             )}
+          </div>
+          <div className="feedback-content">
+            <PoseFeedback feedback={poseResult?.feedback || []} />
           </div>
         </div>
       </div>
