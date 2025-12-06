@@ -4,6 +4,9 @@ import type { PoseDetectionResult } from '../types/pose';
 export class PoseWebSocketService {
   private socket: Socket | null = null;
   private url: string;
+  private connectionReadyPromise: Promise<void> | null = null;
+  private connectionReadyResolve: (() => void) | null = null;
+  private onConnectionStateChange: ((connected: boolean) => void) | null = null;
 
   constructor(url: string = 'http://localhost:8000') {
     this.url = url;
@@ -11,8 +14,17 @@ export class PoseWebSocketService {
 
   connect(
     onResult: (result: PoseDetectionResult) => void,
-    onError: (error: string) => void
-  ): void {
+    onError: (error: string) => void,
+    onConnectionChange?: (connected: boolean) => void
+  ): Promise<void> {
+    // Create a promise that resolves when connection is ready
+    this.connectionReadyPromise = new Promise((resolve) => {
+      this.connectionReadyResolve = resolve;
+    });
+
+    // Store the connection state change callback
+    this.onConnectionStateChange = onConnectionChange || null;
+
     this.socket = io(this.url, {
       transports: ['websocket', 'polling'],  // WebSocket first, polling fallback
       reconnection: true,
@@ -22,10 +34,25 @@ export class PoseWebSocketService {
 
     this.socket.on('connect', () => {
       console.log('WebSocket connected');
+      if (this.onConnectionStateChange) {
+        this.onConnectionStateChange(true);
+      }
+    });
+
+    // Listen for backend's connect_response to confirm readiness
+    this.socket.on('connect_response', (data: any) => {
+      console.log('Backend confirmed connection:', data);
+      if (this.connectionReadyResolve) {
+        this.connectionReadyResolve();
+        this.connectionReadyResolve = null;
+      }
     });
 
     this.socket.on('disconnect', () => {
       console.log('WebSocket disconnected');
+      if (this.onConnectionStateChange) {
+        this.onConnectionStateChange(false);
+      }
     });
 
     this.socket.on('pose_result', (data: PoseDetectionResult) => {
@@ -41,6 +68,8 @@ export class PoseWebSocketService {
       console.error('Connection error:', error);
       onError('Failed to connect to server');
     });
+
+    return this.connectionReadyPromise;
   }
 
   sendFrame(imageData: string): void {

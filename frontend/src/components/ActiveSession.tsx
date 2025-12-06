@@ -21,6 +21,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   const [showTransition, setShowTransition] = useState(false);
   const [poseResult, setPoseResult] = useState<PoseDetectionResult | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isWebSocketReady, setIsWebSocketReady] = useState(false);
   const [sessionStartTime] = useState(Date.now());
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
 
@@ -38,6 +39,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     );
     wsServiceRef.current = wsService;
 
+    // Connect with event-driven connection state tracking
     wsService.connect(
       (result) => {
         setPoseResult(result);
@@ -45,12 +47,18 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
       (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
+      },
+      (connected) => {
+        // Event-driven connection state updates (no polling!)
+        setIsConnected(connected);
       }
-    );
-
-    const checkConnection = setInterval(() => {
-      setIsConnected(wsService.isConnected());
-    }, 1000);
+    ).then(() => {
+      // WebSocket is fully ready (backend confirmed)
+      console.log('WebSocket ready, enabling camera streaming');
+      setIsWebSocketReady(true);
+    }).catch((error) => {
+      console.error('Failed to establish WebSocket connection:', error);
+    });
 
     const updateDimensions = () => {
       if (videoContainerRef.current) {
@@ -64,7 +72,6 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
     return () => {
       wsService.disconnect();
-      clearInterval(checkConnection);
       window.removeEventListener('resize', updateDimensions);
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -215,7 +222,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
           </div>
 
           <div className="video-wrapper" ref={videoContainerRef}>
-            <CameraCapture onFrame={handleFrame} isStreaming={true} />
+            <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
             {poseResult && poseResult.landmarks && (
               <PoseOverlay
                 landmarks={poseResult.landmarks}
