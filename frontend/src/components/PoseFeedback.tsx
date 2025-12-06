@@ -1,4 +1,4 @@
-import { PoseDetectionResult } from '../types/pose';
+import type { PoseDetectionResult } from '../types/pose';
 import './PoseFeedback.css';
 
 interface PoseFeedbackProps {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Landmark } from '../types/pose';
+import type { Landmark } from '../types/pose';
 import './PoseOverlay.css';
 
 interface PoseOverlayProps {

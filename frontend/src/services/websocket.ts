@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { PoseDetectionResult } from '../types/pose';
+import type { PoseDetectionResult } from '../types/pose';
 
 export class PoseWebSocketService {
   private socket: Socket | null = null;

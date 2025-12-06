@@ -3,7 +3,7 @@ import CameraCapture from './components/CameraCapture';
 import PoseOverlay from './components/PoseOverlay';
 import PoseFeedback from './components/PoseFeedback';
 import { PoseWebSocketService } from './services/websocket';
-import { PoseDetectionResult } from './types/pose';
+import type { PoseDetectionResult } from './types/pose';
 import './App.css';
 
 function App() {
