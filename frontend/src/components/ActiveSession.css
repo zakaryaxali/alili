@@ -7,7 +7,6 @@
   display: flex;
   gap: 12px;
   justify-content: flex-start;
-  margin-bottom: 20px;
 }
 
 .session-content {
@@ -38,6 +37,33 @@
   flex-direction: column;
   align-items: stretch;
   gap: 12px;
+}
+
+.segmented-progress-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: visible;
+}
+
+.segmented-progress-bar .progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 1s linear;
+}
+
+.segment-divider {
+  position: absolute;
+  top: -2px;
+  height: 12px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 1px;
 }
 
 .pose-tags {

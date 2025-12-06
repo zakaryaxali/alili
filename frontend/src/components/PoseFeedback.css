@@ -3,15 +3,27 @@
   border-radius: 8px;
   padding: 24px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 220px;
+  display: flex;
+  flex-direction: column;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-size: 14px;
   color: #6b7280;
+  flex-shrink: 0;
+}
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
 }
 
 .status-indicator {
@@ -30,12 +42,13 @@
 }
 
 .pose-info {
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .pose-info h2 {
   margin: 0 0 12px 0;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: #111827;
 }
@@ -60,21 +73,39 @@
   color: #6b7280;
 }
 
-.feedback-list {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 16px;
+.feedback-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-.feedback-list h3 {
+.feedback-section h3 {
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
   color: #111827;
+  flex-shrink: 0;
+}
+
+.feedback-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .feedback-list ul {
   list-style: none;
   padding: 0;
+  margin: 0;
+}
+
+.no-feedback {
+  padding: 12px;
+  background-color: #fef3c7;
+  border-left: 3px solid #f59e0b;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #92400e;
   margin: 0;
 }
 
@@ -94,8 +125,12 @@
 
 .no-pose {
   text-align: center;
-  padding: 40px 20px;
+  padding: 20px;
   color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
 }
 
 .no-pose p {

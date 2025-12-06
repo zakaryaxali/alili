@@ -150,34 +150,44 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   return (
     <div className="active-session">
-      <div className="session-controls">
-        <button onClick={handlePause} className="control-btn pause-btn">
-          {isPaused ? 'Resume' : 'Pause'}
-        </button>
-        <button
-          onClick={handleSkip}
-          className="control-btn skip-btn"
-          disabled={currentPoseIndex >= totalPoses - 1}
-        >
-          Skip pose
-        </button>
-        <button onClick={onExit} className="control-btn exit-btn">
-          Exit Session
-        </button>
-      </div>
-
       <div className="session-content">
         <div className="left-section">
-          <div className="info-card">
-            <div className="info-main">Pose {currentPoseIndex + 1}/{totalPoses}</div>
-            <div className="info-sub">{formatTime(calculateTotalRemaining())} remaining</div>
+          <div className="session-controls">
+            <button onClick={handlePause} className="control-btn pause-btn">
+              {isPaused ? 'Resume' : 'Pause'}
+            </button>
+            <button
+              onClick={handleSkip}
+              className="control-btn skip-btn"
+              disabled={currentPoseIndex >= totalPoses - 1}
+            >
+              Skip pose
+            </button>
+            <button onClick={onExit} className="control-btn exit-btn">
+              Exit Session
+            </button>
           </div>
-
           <div className="info-card pose-name-card">
-            <div>
-              <div className="info-main">{currentPose.pose_name}</div>
-              <div className="info-sub">{formatTime(timeRemaining)} remaining</div>
+            <div className="info-main">
+              ({currentPoseIndex + 1}/{totalPoses}) {currentPose.pose_name}
             </div>
+
+            <div className="segmented-progress-bar">
+              <div className="progress-fill" style={{ width: `${((currentPoseIndex + (1 - timeRemaining / currentPose.duration)) / totalPoses) * 100}%` }} />
+              {session.poses.map((_, index) => {
+                const segmentStart = session.poses.slice(0, index).reduce((sum, p) => sum + p.duration, 0);
+                const totalDuration = session.poses.reduce((sum, p) => sum + p.duration, 0);
+                const position = (segmentStart / totalDuration) * 100;
+                return index > 0 ? (
+                  <div
+                    key={index}
+                    className="segment-divider"
+                    style={{ left: `${position}%` }}
+                  />
+                ) : null;
+              })}
+            </div>
+
             <div className="pose-tags">
               {currentPose.is_pain_target && (
                 <div className="pose-tag pain-tag">

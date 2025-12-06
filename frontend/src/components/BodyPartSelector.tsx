@@ -111,23 +111,9 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      <div className="selection-summary">
-        {painAreas.size > 0 && (
-          <div className="summary-item">
-            <strong>Pain areas:</strong> {Array.from(painAreas).map(formatBodyPartName).join(', ')}
-          </div>
-        )}
-        {improvementAreas.size > 0 && (
-          <div className="summary-item">
-            <strong>Improvement areas:</strong> {Array.from(improvementAreas).map(formatBodyPartName).join(', ')}
-          </div>
-        )}
-      </div>
-
       <button
         className="continue-btn"
         onClick={handleContinue}
-        disabled={painAreas.size === 0 && improvementAreas.size === 0}
       >
         Continue to Session Setup
       </button>

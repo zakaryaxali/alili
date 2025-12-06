@@ -21,7 +21,7 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({ result, isConnected }) => {
       </div>
 
       {result ? (
-        <>
+        <div className="feedback-grid">
           <div className="pose-info">
             <h2>{result.poseName || 'Unknown Pose'}</h2>
             <div className="confidence-bar">
@@ -38,17 +38,21 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({ result, isConnected }) => {
             </p>
           </div>
 
-          {result.feedback && result.feedback.length > 0 && (
-            <div className="feedback-list">
-              <h3>Feedback</h3>
-              <ul>
-                {result.feedback.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
+          <div className="feedback-section">
+            <h3>Feedback</h3>
+            {result.feedback && result.feedback.length > 0 ? (
+              <div className="feedback-list">
+                <ul>
+                  {result.feedback.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="no-feedback">Great form! Maintain this position</p>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="no-pose">
           <p>No pose detected. Stand in front of the camera.</p>
