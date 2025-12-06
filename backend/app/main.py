@@ -10,7 +10,7 @@ app = FastAPI(title="Alili - Yoga Pose Recognition API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
+    allow_credentials=False,  # Must be False with wildcard origins per CORS spec
     allow_methods=["*"],
     allow_headers=["*"],
 )

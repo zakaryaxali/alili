@@ -14,7 +14,7 @@ export class PoseWebSocketService {
     onError: (error: string) => void
   ): void {
     this.socket = io(this.url, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],  // WebSocket first, polling fallback
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5
