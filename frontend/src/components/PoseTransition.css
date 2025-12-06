@@ -79,6 +79,14 @@
   font-size: 1.3em;
 }
 
+.transition-reference-image {
+  width: 100%;
+  max-width: 300px;
+  margin: 20px auto 0;
+  display: block;
+  border-radius: 12px;
+}
+
 .breathing-cue {
   display: flex;
   flex-direction: column;

@@ -150,33 +150,60 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   return (
     <div className="active-session">
-      <div className="session-header">
-        <div className="progress-info">
-          <div className="pose-counter">
-            Pose {currentPoseIndex + 1} of {totalPoses}
-          </div>
-          <div className="total-time">
-            {formatTime(calculateTotalRemaining())} remaining
-          </div>
-        </div>
-
-        <div className="pose-timer">
-          <div className="current-pose-name">{currentPose.pose_name}</div>
-          <div className="timer-display">{formatTime(timeRemaining)}</div>
-        </div>
-
-        <div className="progress-bar">
-          <div
-            className="progress-fill"
-            style={{
-              width: `${((currentPoseIndex + (1 - timeRemaining / currentPose.duration)) / totalPoses) * 100}%`
-            }}
-          />
-        </div>
+      <div className="session-controls">
+        <button onClick={handlePause} className="control-btn pause-btn">
+          {isPaused ? 'Resume' : 'Pause'}
+        </button>
+        <button
+          onClick={handleSkip}
+          className="control-btn skip-btn"
+          disabled={currentPoseIndex >= totalPoses - 1}
+        >
+          Skip pose
+        </button>
+        <button onClick={onExit} className="control-btn exit-btn">
+          Exit Session
+        </button>
       </div>
 
       <div className="session-content">
-        <div className="video-section">
+        <div className="left-section">
+          <div className="info-card">
+            <div className="info-main">Pose {currentPoseIndex + 1}/{totalPoses}</div>
+            <div className="info-sub">{formatTime(calculateTotalRemaining())} remaining</div>
+          </div>
+
+          <div className="info-card pose-name-card">
+            <div>
+              <div className="info-main">{currentPose.pose_name}</div>
+              <div className="info-sub">{formatTime(timeRemaining)} remaining</div>
+            </div>
+            <div className="pose-tags">
+              {currentPose.is_pain_target && (
+                <div className="pose-tag pain-tag">
+                  Pain Relief Pose
+                </div>
+              )}
+              {currentPose.is_improvement_target && (
+                <div className="pose-tag improvement-tag">
+                  Strengthening Pose
+                </div>
+              )}
+            </div>
+          </div>
+
+          <img
+            src="/bear-yoga-pose.png"
+            alt="Pose Reference"
+            className="reference-image"
+          />
+        </div>
+
+        <div className="right-section">
+          <div className="feedback-content">
+            <PoseFeedback result={poseResult} isConnected={isConnected} />
+          </div>
+
           <div className="video-wrapper" ref={videoContainerRef}>
             <CameraCapture onFrame={handleFrame} isStreaming={true} />
             {poseResult && poseResult.landmarks && (
@@ -187,37 +214,6 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               />
             )}
           </div>
-
-          <div className="session-controls">
-            <button onClick={handlePause} className="control-btn pause-btn">
-              {isPaused ? 'Resume' : 'Pause'}
-            </button>
-            <button
-              onClick={handleSkip}
-              className="control-btn skip-btn"
-              disabled={currentPoseIndex >= totalPoses - 1}
-            >
-              Skip Pose
-            </button>
-            <button onClick={onExit} className="control-btn exit-btn">
-              Exit Session
-            </button>
-          </div>
-        </div>
-
-        <div className="feedback-section">
-          <PoseFeedback result={poseResult} isConnected={isConnected} />
-
-          {currentPose.is_pain_target && (
-            <div className="pose-tag pain-tag">
-              Pain Relief Pose
-            </div>
-          )}
-          {currentPose.is_improvement_target && (
-            <div className="pose-tag improvement-tag">
-              Strengthening Pose
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -77,6 +77,11 @@ const PoseTransition: React.FC<PoseTransitionProps> = ({
           <div className="next-label">Next Pose:</div>
           <div className="next-pose-name">{nextPoseName}</div>
           <div className="next-duration">Hold for {formatDuration(nextPoseDuration)}</div>
+          <img
+            src="/bear-yoga-pose.png"
+            alt="Pose Reference"
+            className="transition-reference-image"
+          />
         </div>
 
         <div className="breathing-cue">
