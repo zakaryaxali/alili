@@ -116,8 +116,9 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   const handleTransitionComplete = () => {
     setShowTransition(false);
-    setCurrentPoseIndex(prev => prev + 1);
-    setTimeRemaining(session.poses[currentPoseIndex + 1].duration);
+    const nextIndex = currentPoseIndex + 1;
+    setCurrentPoseIndex(nextIndex);
+    setTimeRemaining(session.poses[nextIndex].duration);
   };
 
   const handlePause = () => {
