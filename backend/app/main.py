@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import socketio
 
 from .websocket import sio
+from .session_routes import router as session_router
 
 app = FastAPI(title="Alili - Yoga Pose Recognition API")
 
@@ -14,6 +15,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(session_router)
 
 # Mount Socket.IO app
 socket_app = socketio.ASGIApp(sio, app)

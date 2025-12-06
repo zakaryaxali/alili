@@ -1,112 +1,111 @@
-import { useState, useEffect, useRef } from 'react';
-import CameraCapture from './components/CameraCapture';
-import PoseOverlay from './components/PoseOverlay';
-import PoseFeedback from './components/PoseFeedback';
-import { PoseWebSocketService } from './services/websocket';
-import type { PoseDetectionResult } from './types/pose';
+import { useState } from 'react';
+import BodyPartSelector from './components/BodyPartSelector';
+import SessionConfig from './components/SessionConfig';
+import ActiveSession from './components/ActiveSession';
+import { SessionService } from './services/sessionService';
+import type { YogaSession, SessionScreen } from './types/session';
 import './App.css';
 
 function App() {
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [poseResult, setPoseResult] = useState<PoseDetectionResult | null>(null);
-  const [error, setError] = useState<string>('');
-  const [isConnected, setIsConnected] = useState(false);
-  const wsServiceRef = useRef<PoseWebSocketService | null>(null);
-  const videoContainerRef = useRef<HTMLDivElement>(null);
-  const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
+  const [currentScreen, setCurrentScreen] = useState<SessionScreen>('selector');
+  const [painAreas, setPainAreas] = useState<string[]>([]);
+  const [improvementAreas, setImprovementAreas] = useState<string[]>([]);
+  const [currentSession, setCurrentSession] = useState<YogaSession | null>(null);
 
-  useEffect(() => {
-    // Initialize WebSocket service
-    const wsService = new PoseWebSocketService(
-      import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    );
-    wsServiceRef.current = wsService;
-
-    // Connect to WebSocket
-    wsService.connect(
-      (result) => {
-        setPoseResult(result);
-        setError('');
-      },
-      (error) => {
-        setError(error);
-        setIsConnected(false);
-      }
-    );
-
-    // Check connection status
-    const checkConnection = setInterval(() => {
-      setIsConnected(wsService.isConnected());
-    }, 1000);
-
-    // Update video dimensions based on container size
-    const updateDimensions = () => {
-      if (videoContainerRef.current) {
-        const { offsetWidth, offsetHeight } = videoContainerRef.current;
-        setVideoDimensions({ width: offsetWidth, height: offsetHeight });
-      }
-    };
-
-    window.addEventListener('resize', updateDimensions);
-    updateDimensions();
-
-    return () => {
-      wsService.disconnect();
-      clearInterval(checkConnection);
-      window.removeEventListener('resize', updateDimensions);
-    };
-  }, []);
-
-  const handleFrame = (imageData: string) => {
-    if (wsServiceRef.current && isConnected) {
-      wsServiceRef.current.sendFrame(imageData);
-    }
+  const handleBodyPartsSelected = (pain: string[], improvement: string[]) => {
+    setPainAreas(pain);
+    setImprovementAreas(improvement);
+    setCurrentScreen('config');
   };
 
-  const toggleStreaming = () => {
-    setIsStreaming(!isStreaming);
+  const handleSessionStart = (session: YogaSession) => {
+    setCurrentSession(session);
+    setCurrentScreen('active');
+  };
+
+  const handleSessionComplete = async (completedPoses: number, totalTime: number) => {
+    if (currentSession) {
+      try {
+        await SessionService.completeSession(currentSession.id, {
+          completed_poses: completedPoses,
+          total_time: totalTime
+        });
+      } catch (error) {
+        console.error('Failed to mark session as complete:', error);
+      }
+    }
+    setCurrentScreen('complete');
+  };
+
+  const handleBackToSelector = () => {
+    setCurrentScreen('selector');
+  };
+
+  const handleStartNewSession = () => {
+    setCurrentSession(null);
+    setPainAreas([]);
+    setImprovementAreas([]);
+    setCurrentScreen('selector');
   };
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Alili - Yoga Pose Recognition</h1>
-        <p>Improve your yoga practice with real-time AI feedback</p>
-      </header>
-
-      {error && (
-        <div className="app-error">
-          <p>{error}</p>
-        </div>
+      {currentScreen === 'selector' && (
+        <>
+          <header className="app-header">
+            <h1>Alili - Yoga Pose Recognition</h1>
+            <p>Personalized yoga sessions with real-time AI feedback</p>
+          </header>
+          <BodyPartSelector onComplete={handleBodyPartsSelected} />
+        </>
       )}
 
-      <div className="app-content">
-        <div className="video-section">
-          <div className="video-wrapper" ref={videoContainerRef}>
-            <CameraCapture onFrame={handleFrame} isStreaming={isStreaming} />
-            {poseResult && poseResult.landmarks && (
-              <PoseOverlay
-                landmarks={poseResult.landmarks}
-                width={videoDimensions.width}
-                height={videoDimensions.height}
-              />
+      {currentScreen === 'config' && (
+        <>
+          <header className="app-header">
+            <h1>Alili</h1>
+          </header>
+          <SessionConfig
+            painAreas={painAreas}
+            improvementAreas={improvementAreas}
+            onStart={handleSessionStart}
+            onBack={handleBackToSelector}
+          />
+        </>
+      )}
+
+      {currentScreen === 'active' && currentSession && (
+        <ActiveSession
+          session={currentSession}
+          onComplete={handleSessionComplete}
+        />
+      )}
+
+      {currentScreen === 'complete' && (
+        <div className="session-complete">
+          <div className="complete-content">
+            <h1>Session Complete!</h1>
+            <p className="complete-message">Great work! You've completed your yoga session.</p>
+
+            {currentSession && (
+              <div className="complete-stats">
+                <div className="stat-card">
+                  <div className="stat-value">{currentSession.num_poses}</div>
+                  <div className="stat-label">Poses Completed</div>
+                </div>
+                <div className="stat-card">
+                  <div className="stat-value">{currentSession.total_duration}</div>
+                  <div className="stat-label">Minutes</div>
+                </div>
+              </div>
             )}
-          </div>
-          <div className="controls">
-            <button
-              onClick={toggleStreaming}
-              className={`stream-button ${isStreaming ? 'streaming' : ''}`}
-              disabled={!isConnected}
-            >
-              {isStreaming ? 'Stop Detection' : 'Start Detection'}
+
+            <button className="new-session-btn" onClick={handleStartNewSession}>
+              Start New Session
             </button>
           </div>
         </div>
-
-        <div className="feedback-section">
-          <PoseFeedback result={poseResult} isConnected={isConnected} />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
