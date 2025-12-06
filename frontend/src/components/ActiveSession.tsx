@@ -180,7 +180,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             </div>
 
             <div className="segmented-progress-bar">
-              <div className="progress-fill" style={{ width: `${((currentPoseIndex + (1 - timeRemaining / currentPose.duration)) / totalPoses) * 100}%` }} />
+              <div className="progress-fill" style={{ width: `${((session.poses.slice(0, currentPoseIndex).reduce((sum, p) => sum + p.duration, 0) + (currentPose.duration - timeRemaining)) / session.poses.reduce((sum, p) => sum + p.duration, 0)) * 100}%` }} />
               {session.poses.map((_, index) => {
                 const segmentStart = session.poses.slice(0, index).reduce((sum, p) => sum + p.duration, 0);
                 const totalDuration = session.poses.reduce((sum, p) => sum + p.duration, 0);
