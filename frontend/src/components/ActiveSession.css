@@ -120,6 +120,17 @@
   cursor: not-allowed;
 }
 
+.exit-btn {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.exit-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: #ef4444;
+}
+
 .feedback-section {
   display: flex;
   flex-direction: column;

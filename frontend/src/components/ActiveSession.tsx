@@ -11,9 +11,10 @@ import './ActiveSession.css';
 interface ActiveSessionProps {
   session: YogaSession;
   onComplete: (completedPoses: number, totalTime: number) => void;
+  onExit: () => void;
 }
 
-const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete }) => {
+const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onExit }) => {
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(session.poses[0].duration);
   const [isPaused, setIsPaused] = useState(false);
@@ -197,6 +198,9 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete }) =>
               disabled={currentPoseIndex >= totalPoses - 1}
             >
               Skip Pose
+            </button>
+            <button onClick={onExit} className="control-btn exit-btn">
+              Exit Session
             </button>
           </div>
         </div>

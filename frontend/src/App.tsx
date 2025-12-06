@@ -41,6 +41,13 @@ function App() {
     setCurrentScreen('selector');
   };
 
+  const handleExitSession = () => {
+    setCurrentSession(null);
+    setPainAreas([]);
+    setImprovementAreas([]);
+    setCurrentScreen('selector');
+  };
+
   const handleStartNewSession = () => {
     setCurrentSession(null);
     setPainAreas([]);
@@ -78,6 +85,7 @@ function App() {
         <ActiveSession
           session={currentSession}
           onComplete={handleSessionComplete}
+          onExit={handleExitSession}
         />
       )}
 
