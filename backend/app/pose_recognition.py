@@ -218,6 +218,64 @@ class YogaPoseRecognizer:
 
         return best_match, best_confidence
 
+    def evaluate_target_pose(self, landmarks: List[Dict], target_pose: str) -> Tuple[float, Dict]:
+        """
+        Evaluate how well current pose matches a specific target pose.
+
+        Args:
+            landmarks: List of landmark dictionaries with x, y, z, visibility
+            target_pose: Name of the target pose to evaluate against
+
+        Returns:
+            Tuple of (confidence, angle_breakdown)
+            - confidence: Overall match score (0.0 to 1.0)
+            - angle_breakdown: Dict with per-joint comparison details
+        """
+        if not landmarks or len(landmarks) < 33:
+            return 0.0, {}
+
+        if target_pose not in self.reference_poses:
+            return 0.0, {}
+
+        # Calculate current pose angles
+        current_angles = self._calculate_angles(landmarks)
+
+        # Get reference pose configuration
+        reference_config = self.reference_poses[target_pose]
+        reference_angles = reference_config['angles']
+        tolerance = reference_config['tolerance']
+
+        # Calculate overall confidence
+        confidence = self._calculate_similarity(
+            current_angles,
+            reference_angles,
+            tolerance
+        )
+
+        # Build detailed angle breakdown
+        angle_breakdown = {}
+        for joint, ref_angle in reference_angles.items():
+            if joint in current_angles:
+                current_angle = current_angles[joint]
+                diff = abs(current_angle - ref_angle)
+
+                # Determine status based on difference
+                if diff <= tolerance:
+                    status = 'good'
+                elif diff <= tolerance * 1.5:
+                    status = 'needs_improvement'
+                else:
+                    status = 'poor'
+
+                angle_breakdown[joint] = {
+                    'current': round(current_angle, 1),
+                    'target': ref_angle,
+                    'difference': round(diff, 1),
+                    'status': status
+                }
+
+        return confidence, angle_breakdown
+
     def _calculate_angles(self, landmarks: List[Dict]) -> Dict[str, float]:
         """Calculate key joint angles from landmarks"""
         angles = {}

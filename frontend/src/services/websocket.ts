@@ -72,11 +72,18 @@ export class PoseWebSocketService {
     return this.connectionReadyPromise;
   }
 
-  sendFrame(imageData: string): void {
+  sendFrame(imageData: string, targetPose?: string): void {
     if (this.socket && this.socket.connected) {
       // Remove the data:image/jpeg;base64, prefix
       const base64Data = imageData.split(',')[1];
-      this.socket.emit('video_frame', { image: base64Data });
+      const payload: { image: string; target_pose?: string } = { image: base64Data };
+
+      // Include target_pose if provided
+      if (targetPose) {
+        payload.target_pose = targetPose;
+      }
+
+      this.socket.emit('video_frame', payload);
     }
   }
 

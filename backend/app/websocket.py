@@ -42,6 +42,7 @@ async def video_frame(sid, data):
     Args:
         sid: Socket ID
         data: Dictionary with 'image' key containing base64 encoded frame
+              and optional 'target_pose' for evaluation mode
     """
     try:
         # Decode the image
@@ -49,6 +50,9 @@ async def video_frame(sid, data):
         if not image_base64:
             await sio.emit('error', {'message': 'No image data provided'}, room=sid)
             return
+
+        # Get optional target pose for evaluation mode
+        target_pose = data.get('target_pose')
 
         # Decode base64 to image
         image = decode_base64_image(image_base64)
@@ -64,20 +68,34 @@ async def video_frame(sid, data):
             # No pose detected
             await sio.emit('pose_result', {
                 'landmarks': [],
-                'poseName': 'No Pose Detected',
+                'poseName': target_pose if target_pose else 'No Pose Detected',
                 'confidence': 0.0,
                 'feedback': ['No person detected in frame'],
                 'timestamp': int(time.time() * 1000)
             }, room=sid)
             return
 
-        # Recognize the pose
-        pose_name, confidence = pose_recognizer.recognize(pose_result['landmarks'])
+        # Choose between evaluation mode or recognition mode
+        if target_pose:
+            # Evaluation mode: evaluate against target pose
+            confidence, angle_breakdown = pose_recognizer.evaluate_target_pose(
+                pose_result['landmarks'],
+                target_pose
+            )
+            pose_name = target_pose
 
-        # Analyze pose quality
-        feedback = []
-        if pose_name != "Unknown":
-            feedback = pose_analyzer.analyze(pose_name, pose_result['landmarks'])
+            # Analyze pose quality for the target pose
+            feedback = []
+            if confidence > 0.0:
+                feedback = pose_analyzer.analyze(target_pose, pose_result['landmarks'])
+        else:
+            # Recognition mode: detect what pose user is doing
+            pose_name, confidence = pose_recognizer.recognize(pose_result['landmarks'])
+
+            # Analyze pose quality
+            feedback = []
+            if pose_name != "Unknown":
+                feedback = pose_analyzer.analyze(pose_name, pose_result['landmarks'])
 
         # Send results back to client
         result = {

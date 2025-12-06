@@ -110,7 +110,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   const handleFrame = (imageData: string) => {
     if (wsServiceRef.current && isConnected) {
-      wsServiceRef.current.sendFrame(imageData);
+      wsServiceRef.current.sendFrame(imageData, currentPose.pose_name);
     }
   };
 

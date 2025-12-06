@@ -23,7 +23,7 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({ result, isConnected }) => {
       {result ? (
         <div className="feedback-grid">
           <div className="pose-info">
-            <h2>{result.poseName || 'Unknown Pose'}</h2>
+            <h2>{result.poseName}</h2>
             <div className="confidence-bar">
               <div
                 className="confidence-fill"
@@ -34,7 +34,7 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({ result, isConnected }) => {
               />
             </div>
             <p className="confidence-text">
-              Confidence: {(result.confidence * 100).toFixed(1)}%
+              Match Accuracy: {(result.confidence * 100).toFixed(1)}%
             </p>
           </div>
 
