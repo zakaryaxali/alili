@@ -200,12 +200,6 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               })}
             </div>
 
-            {poseResult && (
-              <div className="match-accuracy">
-                Match Accuracy: {(poseResult.confidence * 100).toFixed(1)}%
-              </div>
-            )}
-
             <div className="pose-tags">
               {currentPose.is_pain_target && (
                 <div className="pose-tag pain-tag">
@@ -239,7 +233,10 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             )}
           </div>
           <div className="feedback-content">
-            <PoseFeedback feedback={poseResult?.feedback || []} />
+            <PoseFeedback
+              feedback={poseResult?.feedback || []}
+              accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
+            />
           </div>
         </div>
       </div>

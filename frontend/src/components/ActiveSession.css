@@ -64,12 +64,6 @@
   gap: 12px;
 }
 
-.match-accuracy {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1em;
-  font-weight: 600;
-}
-
 .segmented-progress-bar {
   position: relative;
   height: 8px;

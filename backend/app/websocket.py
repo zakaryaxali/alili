@@ -88,6 +88,8 @@ async def video_frame(sid, data):
             feedback = []
             if confidence > 0.0:
                 feedback = pose_analyzer.analyze(target_pose, pose_result['landmarks'])
+            else:
+                feedback = ["Unable to detect pose. Please ensure you're visible in the camera and try the pose again."]
         else:
             # Recognition mode: detect what pose user is doing
             pose_name, confidence = pose_recognizer.recognize(pose_result['landmarks'])

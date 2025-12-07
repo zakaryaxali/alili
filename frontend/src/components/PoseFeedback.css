@@ -15,6 +15,54 @@
   color: #111827;
 }
 
+.accuracy-score {
+  margin-bottom: 16px;
+}
+
+.score-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.score-number {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.score-label {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.score-badge.excellent {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 2px solid #16a34a;
+}
+
+.score-badge.good {
+  background-color: #d1fae5;
+  color: #15803d;
+  border: 2px solid #22c55e;
+}
+
+.score-badge.needs-improvement {
+  background-color: #fed7aa;
+  color: #9a3412;
+  border: 2px solid #f97316;
+}
+
+.score-badge.poor {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 2px solid #ef4444;
+}
+
 .feedback-list {
   flex: 1;
   overflow-y: auto;
