@@ -266,11 +266,9 @@
     grid-template-columns: unset;
   }
 
-  /* Mobile top controls - full width to match camera */
+  /* Mobile: pose header at top, controls at bottom */
   .left-section {
-    order: 1;
-    gap: 8px;
-    width: 100%;
+    display: contents; /* Let children participate in parent flex */
   }
 
   .session-controls {
@@ -279,6 +277,8 @@
     flex-wrap: nowrap;
     justify-content: space-between;
     width: 100%;
+    order: 10; /* Move to bottom */
+    flex-shrink: 0;
   }
 
   .control-btn {
@@ -290,10 +290,10 @@
   }
 
   .connection-status {
-    display: none; /* Hide in controls, show at bottom */
+    display: none;
   }
 
-  /* Pose info row - no thumbnail since we have alternating view */
+  /* Pose info row - stays at top */
   .mobile-pose-header {
     display: flex;
     align-items: center;
@@ -303,6 +303,7 @@
     padding: 14px 16px;
     width: 100%;
     box-sizing: border-box;
+    order: 1; /* Top */
   }
 
   .mobile-pose-thumbnail {
@@ -334,12 +335,7 @@
 
   /* Camera section - portrait, takes most space */
   .right-section {
-    order: 2;
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: contents; /* Let children participate in parent flex */
   }
 
   .video-wrapper {
@@ -347,28 +343,30 @@
     aspect-ratio: unset;
     min-height: 200px;
     border-radius: 12px;
+    order: 2; /* Middle */
   }
 
-  /* Form check at bottom - now just a simple status bar */
+  /* Feedback above buttons */
   .feedback-content {
-    order: 3;
+    order: 5;
     flex-shrink: 0;
   }
 
-  /* Mobile connection status at bottom */
+  /* Mobile connection status - above buttons when disconnected */
   .mobile-connection-status {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    font-size: 0.75em;
-    color: rgba(255, 255, 255, 0.7);
-    padding: 4px 0;
+    font-size: 0.85em;
+    color: #fca5a5;
+    padding: 8px;
+    order: 8;
   }
 
   .mobile-connection-status .status-indicator {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 }
 
@@ -397,6 +395,7 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 16px;
+    order: 2; /* Same as camera */
   }
 
   .mobile-pose-view.hidden {
