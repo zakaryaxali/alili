@@ -100,7 +100,7 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
 
   return (
     <div className="body-part-selector">
-      <p className="subtitle">Tap a body part to select what to focus on</p>
+      <p className="subtitle">Select areas for relief or improvement</p>
 
       <div className="body-parts-grid">
         {bodyParts.map(part => (
