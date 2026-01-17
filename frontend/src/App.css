@@ -1,6 +1,12 @@
+:root {
+  --color-primary: #3F2B96;
+  --color-secondary: #A8C0FF;
+  --color-primary-shadow: rgba(63, 43, 150, 0.4);
+}
+
 .app {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   padding: 20px;
 }
 
@@ -68,7 +74,7 @@
   border-radius: 8px;
   cursor: pointer;
   background: white;
-  color: #667eea;
+  color: var(--color-primary);
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -176,7 +182,7 @@
 .new-session-btn {
   padding: 18px 48px;
   background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
+  color: var(--color-primary);
   border: none;
   border-radius: 12px;
   font-size: 1.3em;

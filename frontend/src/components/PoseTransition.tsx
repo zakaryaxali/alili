@@ -61,7 +61,6 @@ const PoseTransition: React.FC<PoseTransitionProps> = ({
               cy="60"
               r="54"
               fill="none"
-              stroke="#667eea"
               strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 54}`}
