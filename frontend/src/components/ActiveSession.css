@@ -344,6 +344,8 @@
     min-height: 200px;
     border-radius: 12px;
     order: 2; /* Middle */
+    position: relative; /* Required for PoseOverlay positioning */
+    width: 100%;
   }
 
   /* Feedback above buttons - full width */
