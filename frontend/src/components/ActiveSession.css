@@ -418,11 +418,7 @@
   }
 
   .mobile-pose-label {
-    margin-top: 12px;
-    font-size: 1.2em;
-    font-weight: 600;
-    color: #fff;
-    text-align: center;
+    display: none; /* Redundant - name shown in header */
   }
 
   .video-wrapper.mobile-hidden {
