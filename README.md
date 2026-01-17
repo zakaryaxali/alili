@@ -257,7 +257,27 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 ## Development
 
-### Linting
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality before commits:
+
+```bash
+# Install pre-commit hooks (one-time setup)
+cd backend
+uv sync
+uv run pre-commit install
+
+# Run hooks manually on all files
+uv run pre-commit run --all-files
+```
+
+The hooks run automatically on `git commit` and include:
+- **ruff**: Python linting and formatting (backend)
+- **eslint**: TypeScript/React linting (frontend)
+- **trailing-whitespace**: Remove trailing whitespace
+- **end-of-file-fixer**: Ensure files end with newline
+
+### Manual Linting
 
 **Backend (Python):**
 ```bash
