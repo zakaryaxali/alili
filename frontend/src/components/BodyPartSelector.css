@@ -55,13 +55,13 @@
 
 .body-part-btn.selected.pain {
   background: rgba(239, 68, 68, 0.3);
-  border-color: #ef4444;
+  border-color: var(--color-error);
   color: #fff;
 }
 
 .body-part-btn.selected.improve {
   background: rgba(34, 197, 94, 0.3);
-  border-color: #22c55e;
+  border-color: var(--color-success);
   color: #fff;
 }
 
@@ -102,27 +102,27 @@
 }
 
 .popup-btn.pain {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.4);
+  background: var(--color-error-light);
+  color: var(--color-error);
+  border-color: var(--color-error-border);
 }
 
 .popup-btn.pain:hover,
 .popup-btn.pain.active {
   background: rgba(239, 68, 68, 0.4);
-  border-color: #ef4444;
+  border-color: var(--color-error);
 }
 
 .popup-btn.improve {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border-color: rgba(34, 197, 94, 0.4);
+  background: var(--color-success-light);
+  color: var(--color-success);
+  border-color: var(--color-success-border);
 }
 
 .popup-btn.improve:hover,
 .popup-btn.improve.active {
   background: rgba(34, 197, 94, 0.4);
-  border-color: #22c55e;
+  border-color: var(--color-success);
 }
 
 .selection-summary {

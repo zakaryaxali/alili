@@ -33,7 +33,7 @@
 }
 
 .status-indicator.disconnected {
-  background-color: #ef4444;
+  background-color: var(--color-error);
 }
 
 .session-content {
@@ -170,14 +170,14 @@
 }
 
 .exit-btn {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--color-error-light);
   color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid var(--color-error-border);
 }
 
 .exit-btn:hover {
   background: rgba(239, 68, 68, 0.3);
-  border-color: #ef4444;
+  border-color: var(--color-error);
 }
 
 .voice-btn {
@@ -228,15 +228,15 @@
 }
 
 .pose-tag.pain-tag {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--color-error-light);
   color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid var(--color-error-border);
 }
 
 .pose-tag.improvement-tag {
-  background: rgba(34, 197, 94, 0.2);
+  background: var(--color-success-light);
   color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  border: 1px solid var(--color-success-border);
 }
 
 @media (max-width: 1200px) {

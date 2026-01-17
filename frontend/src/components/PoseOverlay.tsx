@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import type { Landmark } from '../types/pose';
 import './PoseOverlay.css';
 
@@ -72,4 +72,4 @@ const PoseOverlay: React.FC<PoseOverlayProps> = ({ landmarks, width, height }) =
   );
 };
 
-export default PoseOverlay;
+export default memo(PoseOverlay);

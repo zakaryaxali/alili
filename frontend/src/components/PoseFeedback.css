@@ -51,13 +51,13 @@
   border: 2px solid #22c55e;
 }
 
-.score-badge.needs-improvement {
+.score-badge.fair {
   background-color: #fed7aa;
   color: #9a3412;
   border: 2px solid #f97316;
 }
 
-.score-badge.poor {
+.score-badge.needs-work {
   background-color: #fee2e2;
   color: #991b1b;
   border: 2px solid #ef4444;
@@ -129,12 +129,12 @@
     color: white;
   }
 
-  .mobile-status-bar.needs-improvement {
+  .mobile-status-bar.fair {
     background-color: #f97316;
     color: white;
   }
 
-  .mobile-status-bar.poor {
+  .mobile-status-bar.needs-work {
     background-color: #ef4444;
     color: white;
   }

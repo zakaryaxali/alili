@@ -108,6 +108,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onFrame, isStreaming }) =
           playsInline
           muted
           className={error ? 'hidden' : ''}
+          aria-label="Live camera feed for pose detection"
         />
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>

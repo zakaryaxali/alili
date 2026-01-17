@@ -1,3 +1,5 @@
+import { memo } from 'react';
+import { getScoreClass, getScoreLabel } from '../utils/scoreClassification';
 import './PoseFeedback.css';
 
 interface PoseFeedbackProps {
@@ -6,20 +8,6 @@ interface PoseFeedbackProps {
 }
 
 const PoseFeedback: React.FC<PoseFeedbackProps> = ({ feedback, accuracy }) => {
-  const getScoreClass = (score: number): string => {
-    if (score >= 5) return 'excellent';
-    if (score >= 4) return 'good';
-    if (score >= 2) return 'needs-improvement';
-    return 'poor';
-  };
-
-  const getScoreLabel = (score: number): string => {
-    if (score >= 5) return 'Excellent';
-    if (score >= 4) return 'Good';
-    if (score >= 2) return 'Needs Improvement';
-    return 'Poor';
-  };
-
   // Mobile-friendly short labels (visible from distance)
   const getMobileLabel = (score: number): string => {
     if (score >= 4) return 'GREAT';
@@ -42,7 +30,7 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({ feedback, accuracy }) => {
           <div className="accuracy-score">
             <div className={`score-badge ${getScoreClass(accuracy)}`}>
               <span className="score-number">{accuracy}/5</span>
-              <span className="score-label">{getScoreLabel(accuracy)}</span>
+              <span className="score-label">{getScoreLabel(accuracy).label}</span>
             </div>
           </div>
         )}
@@ -63,4 +51,4 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({ feedback, accuracy }) => {
   );
 };
 
-export default PoseFeedback;
+export default memo(PoseFeedback);

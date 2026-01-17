@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SessionService } from '../services/sessionService';
+import { formatBodyPartName } from '../utils/formatting';
 import type { YogaSession, SessionPreview } from '../types/session';
 import './SessionConfig.css';
 
@@ -54,12 +55,6 @@ const SessionConfig: React.FC<SessionConfigProps> = ({
       setError('Failed to generate session. Please try again.');
       setLoading(false);
     }
-  };
-
-  const formatBodyPartName = (part: string): string => {
-    return part.split('_').map(word =>
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
   };
 
   return (

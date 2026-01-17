@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { SessionService } from '../services/sessionService';
+import { formatBodyPartName } from '../utils/formatting';
 import './BodyPartSelector.css';
 
 interface BodyPartSelectorProps {
@@ -82,12 +83,6 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
 
   const handleContinue = () => {
     onComplete(Array.from(painAreas), Array.from(improvementAreas));
-  };
-
-  const formatBodyPartName = (part: string): string => {
-    return part.split('_').map(word =>
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
   };
 
   if (loading) {

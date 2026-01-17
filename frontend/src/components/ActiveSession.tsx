@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import CameraCapture from './CameraCapture';
 import PoseOverlay from './PoseOverlay';
 import PoseFeedback from './PoseFeedback';
 import PoseTransition from './PoseTransition';
+import SessionControls from './SessionControls';
+import PoseInfoCard from './PoseInfoCard';
+import { useMobileViewToggle } from '../hooks/useMobileViewToggle';
 import { PoseWebSocketService } from '../services/websocket';
 import { speechService } from '../services/speechService';
 import { getApiUrl } from '../services/api';
@@ -14,7 +17,7 @@ import './ActiveSession.css';
 // Per-pose score tracking
 export interface PoseScore {
   poseName: string;
-  scores: number[]; // All scores collected during the pose
+  scores: number[];
   averageScore: number;
 }
 
@@ -23,11 +26,6 @@ interface ActiveSessionProps {
   onComplete: (completedPoses: number, totalTime: number, poseScores: PoseScore[]) => void;
   onExit: () => void;
 }
-
-// Mobile alternating view timings (in seconds)
-const MOBILE_POSE_INITIAL = 5;  // Show pose first for 5s
-const MOBILE_CAMERA_DURATION = 10;  // Then camera for 10s
-const MOBILE_POSE_DURATION = 3;  // Then pose for 3s, repeat
 
 const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onExit }) => {
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
@@ -40,39 +38,37 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   const [sessionStartTime] = useState(Date.now());
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [mobileShowPose, setMobileShowPose] = useState(true); // Start showing pose
   const [poseScores, setPoseScores] = useState<PoseScore[]>([]);
 
   const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastSpokenFeedbackRef = useRef<string>('');
-  const mobileViewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentPoseScoresRef = useRef<number[]>([]); // Accumulate scores for current pose
+  const currentPoseScoresRef = useRef<number[]>([]);
 
   const currentPose = session.poses[currentPoseIndex];
   const totalPoses = session.poses.length;
 
+  // Use the mobile view toggle hook
+  const { mobileShowPose } = useMobileViewToggle({
+    isPaused,
+    showTransition,
+    currentPoseIndex,
+  });
+
+  // WebSocket and dimension setup
   useEffect(() => {
-    // Initialize WebSocket
     const wsService = new PoseWebSocketService(getApiUrl());
     wsServiceRef.current = wsService;
 
-    // Connect with event-driven connection state tracking
     wsService.connect(
-      (result) => {
-        setPoseResult(result);
-      },
+      (result) => setPoseResult(result),
       (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
       },
-      (connected) => {
-        // Event-driven connection state updates (no polling!)
-        setIsConnected(connected);
-      }
+      (connected) => setIsConnected(connected)
     ).then(() => {
-      // WebSocket is fully ready (backend confirmed)
       console.log('WebSocket ready, enabling camera streaming');
       setIsWebSocketReady(true);
     }).catch((error) => {
@@ -92,24 +88,36 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     return () => {
       wsService.disconnect();
       window.removeEventListener('resize', updateDimensions);
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
+  // Save pose score helper
+  const savePoseScore = useCallback(() => {
+    const scores = currentPoseScoresRef.current;
+    if (scores.length > 0) {
+      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const newPoseScore: PoseScore = {
+        poseName: currentPose.pose_name,
+        scores: [...scores],
+        averageScore: avgScore,
+      };
+      setPoseScores(prev => [...prev, newPoseScore]);
+      return [...poseScores, newPoseScore];
+    }
+    return poseScores;
+  }, [currentPose.pose_name, poseScores]);
+
+  // Timer effect
   useEffect(() => {
-    // Start timer for current pose
     if (!isPaused && !showTransition) {
       timerRef.current = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            // Move to next pose or finish session
             if (currentPoseIndex < totalPoses - 1) {
               setShowTransition(true);
               return 0;
             } else {
-              // Session complete - save final pose scores and complete
               const finalScores = savePoseScore();
               const totalTime = Math.floor((Date.now() - sessionStartTime) / 1000);
               onComplete(totalPoses, totalTime, finalScores);
@@ -122,23 +130,18 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentPoseIndex, isPaused, showTransition, totalPoses, sessionStartTime, onComplete]);
+  }, [currentPoseIndex, isPaused, showTransition, totalPoses, sessionStartTime, onComplete, savePoseScore]);
 
   // Voice: Announce session start
   useEffect(() => {
     if (voiceEnabled && speechService.isSupported()) {
       speechService.speakSessionStart(totalPoses);
     }
-
-    return () => {
-      speechService.stop();
-    };
+    return () => speechService.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only on mount - intentionally not re-running on dependency changes
+  }, []);
 
   // Voice: Announce pose changes
   useEffect(() => {
@@ -151,7 +154,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   useEffect(() => {
     if (!voiceEnabled || !speechService.isSupported()) return;
     if (!poseResult?.feedback?.length) return;
-    if (poseResult.confidence >= 0.7) return; // Only speak corrections when needed
+    if (poseResult.confidence >= 0.7) return;
 
     const firstFeedback = poseResult.feedback[0];
     if (firstFeedback && firstFeedback !== lastSpokenFeedbackRef.current) {
@@ -172,87 +175,42 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     currentPoseScoresRef.current = [];
   }, [currentPoseIndex]);
 
-  // Mobile: Alternating pose/camera view - simple toggle approach
-  useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile || isPaused || showTransition) {
-      return;
-    }
-
-    let isFirstCycle = true;
-    let showPose = true;
-    setMobileShowPose(true);
-
-    const scheduleNext = () => {
-      const duration = showPose
-        ? (isFirstCycle ? MOBILE_POSE_INITIAL : MOBILE_POSE_DURATION)
-        : MOBILE_CAMERA_DURATION;
-
-      mobileViewTimerRef.current = setTimeout(() => {
-        isFirstCycle = false;
-        showPose = !showPose;
-        setMobileShowPose(showPose);
-        scheduleNext();
-      }, duration * 1000);
-    };
-
-    scheduleNext();
-
-    return () => {
-      if (mobileViewTimerRef.current) {
-        clearTimeout(mobileViewTimerRef.current);
-      }
-    };
-  }, [currentPoseIndex, isPaused, showTransition]);
-
-  const handleFrame = (imageData: string) => {
+  const handleFrame = useCallback((imageData: string) => {
     if (wsServiceRef.current && isConnected) {
       wsServiceRef.current.sendFrame(imageData, currentPose.pose_name);
     }
-  };
+  }, [isConnected, currentPose.pose_name]);
 
-  const savePoseScore = () => {
-    const scores = currentPoseScoresRef.current;
-    if (scores.length > 0) {
-      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-      const newPoseScore: PoseScore = {
-        poseName: currentPose.pose_name,
-        scores: [...scores],
-        averageScore: avgScore,
-      };
-      setPoseScores(prev => [...prev, newPoseScore]);
-      return [...poseScores, newPoseScore];
-    }
-    return poseScores;
-  };
-
-  const handleTransitionComplete = () => {
-    // Save scores for the pose that just completed before transitioning
+  const handleTransitionComplete = useCallback(() => {
     savePoseScore();
     setShowTransition(false);
     const nextIndex = currentPoseIndex + 1;
     setCurrentPoseIndex(nextIndex);
     setTimeRemaining(session.poses[nextIndex].duration);
-  };
+  }, [savePoseScore, currentPoseIndex, session.poses]);
 
-  const handlePause = () => {
-    setIsPaused(!isPaused);
-  };
+  const handlePause = useCallback(() => {
+    setIsPaused(prev => !prev);
+  }, []);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     if (currentPoseIndex < totalPoses - 1) {
       setShowTransition(true);
     }
-  };
+  }, [currentPoseIndex, totalPoses]);
 
-  const handleExit = () => {
+  const handleVoiceToggle = useCallback(() => {
+    setVoiceEnabled(prev => !prev);
+  }, []);
+
+  const handleExit = useCallback(() => {
     const confirmed = window.confirm(
       'Are you sure you want to exit? Your session progress and scores will be lost.'
     );
     if (confirmed) {
       onExit();
     }
-  };
+  }, [onExit]);
 
   if (showTransition) {
     const nextPose = session.poses[currentPoseIndex + 1];
@@ -269,34 +227,16 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     <div className="active-session">
       <div className="session-content">
         <div className="left-section">
-          <div className="session-controls">
-            <button onClick={handlePause} className="control-btn pause-btn">
-              {isPaused ? 'Resume' : 'Pause'}
-            </button>
-            <button
-              onClick={handleSkip}
-              className="control-btn skip-btn"
-              disabled={currentPoseIndex >= totalPoses - 1}
-            >
-              Skip
-            </button>
-            <button
-              onClick={() => setVoiceEnabled(!voiceEnabled)}
-              className={`control-btn voice-btn ${voiceEnabled ? 'voice-on' : 'voice-off'}`}
-              title={voiceEnabled ? 'Mute voice guidance' : 'Enable voice guidance'}
-            >
-              {voiceEnabled ? 'Voice' : 'Muted'}
-            </button>
-            <button onClick={handleExit} className="control-btn exit-btn">
-              Exit
-            </button>
-            {!isConnected && (
-              <div className="connection-status disconnected">
-                <div className="status-indicator disconnected" />
-                <span>Disconnected</span>
-              </div>
-            )}
-          </div>
+          <SessionControls
+            isPaused={isPaused}
+            voiceEnabled={voiceEnabled}
+            canSkip={currentPoseIndex < totalPoses - 1}
+            isConnected={isConnected}
+            onPause={handlePause}
+            onSkip={handleSkip}
+            onVoiceToggle={handleVoiceToggle}
+            onExit={handleExit}
+          />
 
           {/* Mobile-only pose header with thumbnail */}
           <div className="mobile-pose-header">
@@ -312,40 +252,14 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               </div>
             </div>
           </div>
-          <div className="info-card pose-name-card">
-            <div className="info-main">
-              ({currentPoseIndex + 1}/{totalPoses}) {currentPose.pose_name}
-            </div>
 
-            <div className="segmented-progress-bar">
-              <div className="progress-fill" style={{ width: `${((session.poses.slice(0, currentPoseIndex).reduce((sum, p) => sum + p.duration, 0) + (currentPose.duration - timeRemaining)) / session.poses.reduce((sum, p) => sum + p.duration, 0)) * 100}%` }} />
-              {session.poses.map((_, index) => {
-                const segmentStart = session.poses.slice(0, index).reduce((sum, p) => sum + p.duration, 0);
-                const totalDuration = session.poses.reduce((sum, p) => sum + p.duration, 0);
-                const position = (segmentStart / totalDuration) * 100;
-                return index > 0 ? (
-                  <div
-                    key={index}
-                    className="segment-divider"
-                    style={{ left: `${position}%` }}
-                  />
-                ) : null;
-              })}
-            </div>
-
-            <div className="pose-tags">
-              {currentPose.is_pain_target && (
-                <div className="pose-tag pain-tag">
-                  Pain Relief Pose
-                </div>
-              )}
-              {currentPose.is_improvement_target && (
-                <div className="pose-tag improvement-tag">
-                  Strengthening Pose
-                </div>
-              )}
-            </div>
-          </div>
+          <PoseInfoCard
+            currentPose={currentPose}
+            currentPoseIndex={currentPoseIndex}
+            totalPoses={totalPoses}
+            timeRemaining={timeRemaining}
+            session={session}
+          />
 
           <img
             src={getPoseImage(currentPose.pose_name)}
