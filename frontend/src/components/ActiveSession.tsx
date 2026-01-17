@@ -4,8 +4,10 @@ import PoseOverlay from './PoseOverlay';
 import PoseFeedback from './PoseFeedback';
 import PoseTransition from './PoseTransition';
 import { PoseWebSocketService } from '../services/websocket';
+import { speechService } from '../services/speechService';
 import type { PoseDetectionResult } from '../types/pose';
 import type { YogaSession } from '../types/session';
+import { getPoseImage } from '../utils/poseImages';
 import './ActiveSession.css';
 
 interface ActiveSessionProps {
@@ -24,10 +26,12 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   const [isWebSocketReady, setIsWebSocketReady] = useState(false);
   const [sessionStartTime] = useState(Date.now());
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSpokenFeedbackRef = useRef<string>('');
 
   const currentPose = session.poses[currentPoseIndex];
   const totalPoses = session.poses.length;
@@ -108,6 +112,38 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     };
   }, [currentPoseIndex, isPaused, showTransition, totalPoses, sessionStartTime, onComplete]);
 
+  // Voice: Announce session start
+  useEffect(() => {
+    if (voiceEnabled && speechService.isSupported()) {
+      speechService.speakSessionStart(totalPoses);
+    }
+
+    return () => {
+      speechService.stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only on mount - intentionally not re-running on dependency changes
+
+  // Voice: Announce pose changes
+  useEffect(() => {
+    if (voiceEnabled && speechService.isSupported() && !showTransition) {
+      speechService.speakPoseTransition(currentPose.pose_name, currentPose.duration);
+    }
+  }, [currentPoseIndex, voiceEnabled, showTransition, currentPose.pose_name, currentPose.duration]);
+
+  // Voice: Speak feedback when confidence is low
+  useEffect(() => {
+    if (!voiceEnabled || !speechService.isSupported()) return;
+    if (!poseResult?.feedback?.length) return;
+    if (poseResult.confidence >= 0.7) return; // Only speak corrections when needed
+
+    const firstFeedback = poseResult.feedback[0];
+    if (firstFeedback && firstFeedback !== lastSpokenFeedbackRef.current) {
+      speechService.speakFeedback(firstFeedback);
+      lastSpokenFeedbackRef.current = firstFeedback;
+    }
+  }, [poseResult?.feedback, poseResult?.confidence, voiceEnabled]);
+
   const handleFrame = (imageData: string) => {
     if (wsServiceRef.current && isConnected) {
       wsServiceRef.current.sendFrame(imageData, currentPose.pose_name);
@@ -171,6 +207,13 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             >
               Skip pose
             </button>
+            <button
+              onClick={() => setVoiceEnabled(!voiceEnabled)}
+              className={`control-btn voice-btn ${voiceEnabled ? 'voice-on' : 'voice-off'}`}
+              title={voiceEnabled ? 'Mute voice guidance' : 'Enable voice guidance'}
+            >
+              {voiceEnabled ? 'Voice On' : 'Voice Off'}
+            </button>
             <button onClick={onExit} className="control-btn exit-btn">
               Exit Session
             </button>
@@ -215,8 +258,8 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
           </div>
 
           <img
-            src="/bear-yoga-pose.png"
-            alt="Pose Reference"
+            src={getPoseImage(currentPose.pose_name)}
+            alt={currentPose.pose_name}
             className="reference-image"
           />
         </div>
