@@ -1,8 +1,15 @@
+import os
 import socketio
 import time
+import asyncio
+from dotenv import load_dotenv
 from .pose_detection import PoseDetector, decode_base64_image
 from .pose_recognition import YogaPoseRecognizer
 from .pose_analysis import PoseQualityAnalyzer
+from .services.gemini_analyzer import GeminiPoseAnalyzer
+
+# Load environment variables
+load_dotenv()
 
 # Create Socket.IO server
 sio = socketio.AsyncServer(
@@ -20,6 +27,14 @@ pose_detector = PoseDetector(
 pose_recognizer = YogaPoseRecognizer()
 pose_analyzer = PoseQualityAnalyzer()
 
+# Initialize Gemini analyzer if API key is available
+gemini_api_key = os.getenv('GEMINI_API_KEY')
+gemini_analyzer = GeminiPoseAnalyzer(gemini_api_key) if gemini_api_key else None
+
+# Gemini feedback cache per client (sid -> cached data)
+gemini_cache: dict[str, dict] = {}
+GEMINI_CALL_INTERVAL = 3.0  # seconds between Gemini calls
+
 
 @sio.event
 async def connect(sid, environ):
@@ -32,6 +47,9 @@ async def connect(sid, environ):
 async def disconnect(sid):
     """Handle client disconnection"""
     print(f"Client disconnected: {sid}")
+    # Clean up Gemini cache for this client
+    if sid in gemini_cache:
+        del gemini_cache[sid]
 
 
 @sio.event
@@ -76,6 +94,7 @@ async def video_frame(sid, data):
             return
 
         # Choose between evaluation mode or recognition mode
+        angle_breakdown = {}
         if target_pose:
             # Evaluation mode: evaluate against target pose
             confidence, angle_breakdown = pose_recognizer.evaluate_target_pose(
@@ -99,12 +118,22 @@ async def video_frame(sid, data):
             if pose_name != "Unknown":
                 feedback = pose_analyzer.analyze(pose_name, pose_result['landmarks'])
 
+        # Use Gemini for richer feedback (with caching)
+        gemini_feedback = None
+        if gemini_analyzer and target_pose and confidence > 0.0:
+            gemini_feedback = await _get_gemini_feedback(
+                sid, image_base64, target_pose, confidence, angle_breakdown
+            )
+
+        # Prefer Gemini feedback if available, fallback to rule-based
+        final_feedback = gemini_feedback if gemini_feedback else feedback
+
         # Send results back to client
         result = {
             'landmarks': pose_result['landmarks'],
             'poseName': pose_name,
             'confidence': float(confidence),
-            'feedback': feedback,
+            'feedback': final_feedback,
             'timestamp': int(time.time() * 1000)
         }
 
@@ -113,3 +142,52 @@ async def video_frame(sid, data):
     except Exception as e:
         print(f"Error processing frame: {str(e)}")
         await sio.emit('error', {'message': f'Error processing frame: {str(e)}'}, room=sid)
+
+
+async def _get_gemini_feedback(
+    sid: str,
+    image_base64: str,
+    target_pose: str,
+    confidence: float,
+    angle_breakdown: dict
+) -> list[str] | None:
+    """
+    Get Gemini feedback with caching to reduce API calls.
+
+    Calls Gemini every GEMINI_CALL_INTERVAL seconds, returns cached feedback otherwise.
+    """
+    current_time = time.time()
+
+    # Initialize cache for this client if needed
+    if sid not in gemini_cache:
+        gemini_cache[sid] = {
+            'last_call': 0,
+            'feedback': None,
+            'target_pose': None
+        }
+
+    cache = gemini_cache[sid]
+
+    # Check if we should make a new Gemini call
+    time_since_last = current_time - cache['last_call']
+    pose_changed = cache['target_pose'] != target_pose
+
+    if time_since_last >= GEMINI_CALL_INTERVAL or pose_changed:
+        # Update last_call BEFORE making the API call to prevent retry storms
+        cache['last_call'] = current_time
+        cache['target_pose'] = target_pose
+
+        # Make Gemini API call (non-blocking for the main loop)
+        try:
+            feedback = await gemini_analyzer.analyze_pose(
+                image_base64, target_pose, confidence, angle_breakdown
+            )
+
+            if feedback:
+                cache['feedback'] = feedback
+
+        except Exception as e:
+            print(f"Gemini call failed: {e}")
+            # Keep using cached feedback on error
+
+    return cache['feedback']
