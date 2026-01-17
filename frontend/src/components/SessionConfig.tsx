@@ -71,19 +71,6 @@ const SessionConfig: React.FC<SessionConfigProps> = ({
       <h2>Configure Your Session</h2>
 
       <div className="config-card">
-        <div className="selected-areas">
-          {painAreas.length > 0 && (
-            <div className="area-group pain-group">
-              <strong>Pain Relief:</strong> {painAreas.map(formatBodyPartName).join(', ')}
-            </div>
-          )}
-          {improvementAreas.length > 0 && (
-            <div className="area-group improvement-group">
-              <strong>Improvement:</strong> {improvementAreas.map(formatBodyPartName).join(', ')}
-            </div>
-          )}
-        </div>
-
         <div className="duration-selector">
           <label htmlFor="duration-slider">
             <h3>Session Duration</h3>
@@ -127,12 +114,16 @@ const SessionConfig: React.FC<SessionConfigProps> = ({
             </div>
 
             <div className="preview-tags">
-              {preview.targets_pain && (
-                <span className="tag pain-tag">Includes pain relief poses</span>
-              )}
-              {preview.targets_improvement && (
-                <span className="tag improvement-tag">Includes strengthening poses</span>
-              )}
+              {painAreas.map(part => (
+                <span key={`pain-${part}`} className="tag pain-tag">
+                  {formatBodyPartName(part)} relief
+                </span>
+              ))}
+              {improvementAreas.map(part => (
+                <span key={`improve-${part}`} className="tag improvement-tag">
+                  {formatBodyPartName(part)} strengthening
+                </span>
+              ))}
             </div>
           </div>
         )}
