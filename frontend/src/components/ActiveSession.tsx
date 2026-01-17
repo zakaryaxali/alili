@@ -17,6 +17,11 @@ interface ActiveSessionProps {
   onExit: () => void;
 }
 
+// Mobile alternating view timings (in seconds)
+const MOBILE_POSE_INITIAL = 5;  // Show pose first for 5s
+const MOBILE_CAMERA_DURATION = 10;  // Then camera for 10s
+const MOBILE_POSE_DURATION = 3;  // Then pose for 3s, repeat
+
 const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onExit }) => {
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(session.poses[0].duration);
@@ -28,11 +33,13 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   const [sessionStartTime] = useState(Date.now());
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [mobileShowPose, setMobileShowPose] = useState(true); // Start showing pose
 
   const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSpokenFeedbackRef = useRef<string>('');
+  const mobileViewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentPose = session.poses[currentPoseIndex];
   const totalPoses = session.poses.length;
@@ -143,6 +150,38 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
   }, [poseResult?.feedback, poseResult?.confidence, voiceEnabled]);
 
+  // Mobile: Alternating pose/camera view
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile || isPaused || showTransition) {
+      return;
+    }
+
+    const scheduleCameraView = (delay: number) => {
+      mobileViewTimerRef.current = setTimeout(() => {
+        setMobileShowPose(false);
+        schedulePoseView();
+      }, delay * 1000);
+    };
+
+    const schedulePoseView = () => {
+      mobileViewTimerRef.current = setTimeout(() => {
+        setMobileShowPose(true);
+        scheduleCameraView(MOBILE_POSE_DURATION);
+      }, MOBILE_CAMERA_DURATION * 1000);
+    };
+
+    // Start: show pose first, then switch to camera
+    setMobileShowPose(true);
+    scheduleCameraView(MOBILE_POSE_INITIAL);
+
+    return () => {
+      if (mobileViewTimerRef.current) {
+        clearTimeout(mobileViewTimerRef.current);
+      }
+    };
+  }, [currentPoseIndex, isPaused, showTransition]);
+
   const handleFrame = (imageData: string) => {
     if (wsServiceRef.current && isConnected) {
       wsServiceRef.current.sendFrame(imageData, currentPose.pose_name);
@@ -216,10 +255,12 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             <button onClick={onExit} className="control-btn exit-btn">
               Exit
             </button>
-            <div className="connection-status">
-              <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
-              <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
-            </div>
+            {!isConnected && (
+              <div className="connection-status disconnected">
+                <div className="status-indicator disconnected" />
+                <span>Disconnected</span>
+              </div>
+            )}
           </div>
 
           {/* Mobile-only pose header with thumbnail */}
@@ -279,7 +320,17 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
         </div>
 
         <div className="right-section">
-          <div className="video-wrapper" ref={videoContainerRef}>
+          {/* Mobile: Full-screen pose reference (alternates with camera) */}
+          <div className={`mobile-pose-view ${mobileShowPose ? 'visible' : 'hidden'}`}>
+            <img
+              src={getPoseImage(currentPose.pose_name)}
+              alt={currentPose.pose_name}
+              className="mobile-pose-fullscreen"
+            />
+            <div className="mobile-pose-label">{currentPose.pose_name}</div>
+          </div>
+
+          <div className={`video-wrapper ${mobileShowPose ? 'mobile-hidden' : ''}`} ref={videoContainerRef}>
             <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
             {poseResult && poseResult.landmarks && (
               <PoseOverlay
@@ -296,11 +347,13 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             />
           </div>
 
-          {/* Mobile-only connection status */}
-          <div className="mobile-connection-status">
-            <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
-            <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
-          </div>
+          {/* Mobile-only: Show warning when disconnected */}
+          {!isConnected && (
+            <div className="mobile-connection-status disconnected">
+              <div className="status-indicator disconnected" />
+              <span>Disconnected</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

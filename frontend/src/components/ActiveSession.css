@@ -374,7 +374,55 @@
 /* Hide mobile-only elements on desktop */
 @media (min-width: 769px) {
   .mobile-pose-header,
-  .mobile-connection-status {
+  .mobile-connection-status,
+  .mobile-pose-view {
+    display: none;
+  }
+}
+
+/* Mobile alternating pose/camera view */
+.mobile-pose-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-pose-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .mobile-pose-view.hidden {
+    display: none;
+  }
+
+  .mobile-pose-view.visible {
+    display: flex;
+  }
+
+  .mobile-pose-fullscreen {
+    flex: 1;
+    min-height: 0;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+
+  .mobile-pose-label {
+    margin-top: 12px;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+  }
+
+  .video-wrapper.mobile-hidden {
     display: none;
   }
 }

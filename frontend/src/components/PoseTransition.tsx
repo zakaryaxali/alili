@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getPoseImage } from '../utils/poseImages';
 import './PoseTransition.css';
 
 interface PoseTransitionProps {
@@ -78,8 +79,8 @@ const PoseTransition: React.FC<PoseTransitionProps> = ({
           <div className="next-pose-name">{nextPoseName}</div>
           <div className="next-duration">Hold for {formatDuration(nextPoseDuration)}</div>
           <img
-            src="/bear-yoga-pose.png"
-            alt="Pose Reference"
+            src={getPoseImage(nextPoseName)}
+            alt={nextPoseName}
             className="transition-reference-image"
           />
         </div>
