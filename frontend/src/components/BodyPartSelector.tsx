@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SessionService } from '../services/sessionService';
 import './BodyPartSelector.css';
 
@@ -12,6 +12,8 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
   const [improvementAreas, setImprovementAreas] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [activePopup, setActivePopup] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadBodyParts();
@@ -28,32 +30,54 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
     }
   };
 
-  const togglePain = (part: string) => {
-    const newPain = new Set(painAreas);
-    if (newPain.has(part)) {
-      newPain.delete(part);
-    } else {
-      newPain.add(part);
-      // Remove from improvement if in pain
-      const newImprovement = new Set(improvementAreas);
-      newImprovement.delete(part);
-      setImprovementAreas(newImprovement);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setActivePopup(null);
+      }
+    };
+
+    if (activePopup) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-    setPainAreas(newPain);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activePopup]);
+
+  const handleBodyPartClick = (part: string) => {
+    setActivePopup(activePopup === part ? null : part);
   };
 
-  const toggleImprovement = (part: string) => {
+  const handleSelection = (part: string, type: 'pain' | 'improve') => {
+    const newPain = new Set(painAreas);
     const newImprovement = new Set(improvementAreas);
-    if (newImprovement.has(part)) {
-      newImprovement.delete(part);
+
+    if (type === 'pain') {
+      if (newPain.has(part)) {
+        newPain.delete(part);
+      } else {
+        newPain.add(part);
+        newImprovement.delete(part);
+      }
     } else {
-      newImprovement.add(part);
-      // Remove from pain if in improvement
-      const newPain = new Set(painAreas);
-      newPain.delete(part);
-      setPainAreas(newPain);
+      if (newImprovement.has(part)) {
+        newImprovement.delete(part);
+      } else {
+        newImprovement.add(part);
+        newPain.delete(part);
+      }
     }
+
+    setPainAreas(newPain);
     setImprovementAreas(newImprovement);
+    setActivePopup(null);
+  };
+
+  const getButtonClass = (part: string): string => {
+    if (painAreas.has(part)) return 'body-part-btn selected pain';
+    if (improvementAreas.has(part)) return 'body-part-btn selected improve';
+    return 'body-part-btn';
   };
 
   const handleContinue = () => {
@@ -76,39 +100,35 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
 
   return (
     <div className="body-part-selector">
-      <h2>What would you like to work on today?</h2>
-      <p className="subtitle">Select body parts that hurt or that you want to improve</p>
+      <p className="subtitle">Tap a body part to select what to focus on</p>
 
-      <div className="selection-columns">
-        <div className="column pain-column">
-          <h3>😣 What hurts?</h3>
-          <div className="body-parts-grid">
-            {bodyParts.map(part => (
-              <button
-                key={`pain-${part}`}
-                className={`body-part-btn ${painAreas.has(part) ? 'selected pain' : ''}`}
-                onClick={() => togglePain(part)}
-              >
-                {formatBodyPartName(part)}
-              </button>
-            ))}
+      <div className="body-parts-grid">
+        {bodyParts.map(part => (
+          <div key={part} className="body-part-wrapper">
+            <button
+              className={getButtonClass(part)}
+              onClick={() => handleBodyPartClick(part)}
+            >
+              {formatBodyPartName(part)}
+            </button>
+            {activePopup === part && (
+              <div className="selection-popup" ref={popupRef}>
+                <button
+                  className={`popup-btn pain ${painAreas.has(part) ? 'active' : ''}`}
+                  onClick={() => handleSelection(part, 'pain')}
+                >
+                  😣 Hurts
+                </button>
+                <button
+                  className={`popup-btn improve ${improvementAreas.has(part) ? 'active' : ''}`}
+                  onClick={() => handleSelection(part, 'improve')}
+                >
+                  💪 Improve
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="column improvement-column">
-          <h3>💪 What to improve?</h3>
-          <div className="body-parts-grid">
-            {bodyParts.map(part => (
-              <button
-                key={`improve-${part}`}
-                className={`body-part-btn ${improvementAreas.has(part) ? 'selected improve' : ''}`}
-                onClick={() => toggleImprovement(part)}
-              >
-                {formatBodyPartName(part)}
-              </button>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
 
       <button
