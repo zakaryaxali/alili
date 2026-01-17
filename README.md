@@ -56,6 +56,48 @@ The frontend will be available at `http://localhost:5173`
 5. **Start session** - Allow camera access and follow the guided poses
 6. **Get feedback** - See real-time skeleton overlay and pose quality feedback
 
+## Running on Mobile
+
+To use the app on your phone (same WiFi network):
+
+### 1. Generate SSL certificates for the backend
+
+```bash
+cd backend
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes -subj "/CN=localhost"
+```
+
+### 2. Start servers with network access
+
+```bash
+# Terminal 1 - Backend (HTTPS)
+cd backend
+uv run uvicorn app.main:socket_app --reload --port 8000 --host 0.0.0.0 --ssl-keyfile=key.pem --ssl-certfile=cert.pem
+
+# Terminal 2 - Frontend (HTTPS via Vite plugin)
+cd frontend
+npm run dev -- --host
+```
+
+### 3. Get your computer's IP
+
+```bash
+# macOS
+ipconfig getifaddr en0
+
+# Linux
+hostname -I | awk '{print $1}'
+```
+
+### 4. Access from phone
+
+1. Connect your phone to the same WiFi network
+2. Visit `https://<your-ip>:8000/` and accept the certificate warning
+3. Visit `https://<your-ip>:5173/` and accept the certificate warning
+4. The camera should now work with front-facing camera
+
+**Note:** Self-signed certificates trigger browser warnings - this is expected for local development.
+
 ## Supported Yoga Poses
 
 | Pose | Difficulty | Best For |
