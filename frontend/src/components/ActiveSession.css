@@ -348,11 +348,9 @@
     border-radius: 12px;
   }
 
-  /* Form check at bottom - fixed height to prevent camera resizing */
+  /* Form check at bottom - now just a simple status bar */
   .feedback-content {
     order: 3;
-    max-height: 200px;
-    overflow-y: auto;
     flex-shrink: 0;
   }
 

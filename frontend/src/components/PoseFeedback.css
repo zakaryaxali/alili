@@ -98,3 +98,56 @@
 .feedback-list li:last-child {
   margin-bottom: 0;
 }
+
+/* Mobile status bar - hidden on desktop */
+.mobile-status-bar {
+  display: none;
+}
+
+/* Desktop feedback - shown by default */
+.desktop-feedback {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  /* Show mobile status bar */
+  .mobile-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 1.4em;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .mobile-status-bar.excellent,
+  .mobile-status-bar.good {
+    background-color: #16a34a;
+    color: white;
+  }
+
+  .mobile-status-bar.needs-improvement {
+    background-color: #f97316;
+    color: white;
+  }
+
+  .mobile-status-bar.poor {
+    background-color: #ef4444;
+    color: white;
+  }
+
+  /* Hide desktop feedback on mobile */
+  .desktop-feedback {
+    display: none;
+  }
+
+  /* Compact mobile container */
+  .pose-feedback {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+}
