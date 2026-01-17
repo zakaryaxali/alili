@@ -41,7 +41,7 @@ export class PoseWebSocketService {
     });
 
     // Listen for backend's connect_response to confirm readiness
-    this.socket.on('connect_response', (data: any) => {
+    this.socket.on('connect_response', (data: { status: string; message?: string }) => {
       console.log('Backend confirmed connection:', data);
       if (this.connectionReadyResolve) {
         this.connectionReadyResolve();
@@ -60,12 +60,12 @@ export class PoseWebSocketService {
       onResult(data);
     });
 
-    this.socket.on('error', (error: any) => {
+    this.socket.on('error', (error: { message?: string }) => {
       console.error('WebSocket error:', error);
       onError(error.message || 'WebSocket error occurred');
     });
 
-    this.socket.on('connect_error', (error: any) => {
+    this.socket.on('connect_error', (error: Error) => {
       console.error('Connection error:', error);
       onError('Failed to connect to server');
     });

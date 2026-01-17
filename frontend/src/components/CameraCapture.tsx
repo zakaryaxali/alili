@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import './CameraCapture.css';
 
 interface CameraCaptureProps {
@@ -14,22 +14,22 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onFrame, isStreaming }) =
   const streamRef = useRef<MediaStream | null>(null);
   const intervalRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    startCamera();
-    return () => {
-      stopCamera();
-    };
+  const stopFrameCapture = useCallback(() => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }, []);
 
-  useEffect(() => {
-    if (isStreaming && hasPermission) {
-      startFrameCapture();
-    } else {
-      stopFrameCapture();
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-  }, [isStreaming, hasPermission]);
+    stopFrameCapture();
+  }, [stopFrameCapture]);
 
-  const startCamera = async () => {
+  const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -52,17 +52,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onFrame, isStreaming }) =
       setHasPermission(false);
       console.error('Camera access error:', err);
     }
-  };
+  }, []);
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    stopFrameCapture();
-  };
-
-  const captureFrame = () => {
+  const captureFrame = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
@@ -78,20 +70,30 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onFrame, isStreaming }) =
     // Convert to JPEG with 80% quality for efficient transmission
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
     onFrame(imageData);
-  };
+  }, [onFrame]);
 
-  const startFrameCapture = () => {
+  const startFrameCapture = useCallback(() => {
     stopFrameCapture();
     // Capture frames at ~15 FPS
     intervalRef.current = window.setInterval(captureFrame, 1000 / 15);
-  };
+  }, [stopFrameCapture, captureFrame]);
 
-  const stopFrameCapture = () => {
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+  // Initialize camera on mount - startCamera sets state which is intentional for this external API
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    startCamera();
+    return () => {
+      stopCamera();
+    };
+  }, [startCamera, stopCamera]);
+
+  useEffect(() => {
+    if (isStreaming && hasPermission) {
+      startFrameCapture();
+    } else {
+      stopFrameCapture();
     }
-  };
+  }, [isStreaming, hasPermission, startFrameCapture, stopFrameCapture]);
 
   return (
     <div className="camera-capture">

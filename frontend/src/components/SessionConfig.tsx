@@ -23,21 +23,20 @@ const SessionConfig: React.FC<SessionConfigProps> = ({
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
+    const loadPreview = async () => {
+      try {
+        const previewData = await SessionService.previewSession({
+          pain_areas: painAreas,
+          improvement_areas: improvementAreas,
+          duration_minutes: durationMinutes
+        });
+        setPreview(previewData);
+      } catch (err) {
+        console.error('Failed to load preview:', err);
+      }
+    };
     loadPreview();
-  }, [durationMinutes, painAreas, improvementAreas]);
-
-  const loadPreview = async () => {
-    try {
-      const previewData = await SessionService.previewSession({
-        pain_areas: painAreas,
-        improvement_areas: improvementAreas,
-        duration_minutes: durationMinutes
-      });
-      setPreview(previewData);
-    } catch (err) {
-      console.error('Failed to load preview:', err);
-    }
-  };
+  }, [painAreas, improvementAreas, durationMinutes]);
 
   const handleStartSession = async () => {
     setLoading(true);
@@ -51,7 +50,7 @@ const SessionConfig: React.FC<SessionConfigProps> = ({
       });
 
       onStart(session);
-    } catch (err) {
+    } catch {
       setError('Failed to generate session. Please try again.');
       setLoading(false);
     }

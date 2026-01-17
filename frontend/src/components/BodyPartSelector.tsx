@@ -17,19 +17,18 @@ const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({ onComplete }) => {
   const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const loadBodyParts = async () => {
+      try {
+        const parts = await SessionService.getBodyParts();
+        setBodyParts(parts);
+        setLoading(false);
+      } catch {
+        setError('Failed to load body parts');
+        setLoading(false);
+      }
+    };
     loadBodyParts();
   }, []);
-
-  const loadBodyParts = async () => {
-    try {
-      const parts = await SessionService.getBodyParts();
-      setBodyParts(parts);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to load body parts');
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

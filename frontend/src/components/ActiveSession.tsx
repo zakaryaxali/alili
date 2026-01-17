@@ -6,6 +6,8 @@ import PoseTransition from './PoseTransition';
 import SessionControls from './SessionControls';
 import PoseInfoCard from './PoseInfoCard';
 import { useMobileViewToggle } from '../hooks/useMobileViewToggle';
+import { useSessionTimer } from '../hooks/useSessionTimer';
+import { usePoseScoring, type PoseScore } from '../hooks/usePoseScoring';
 import { PoseWebSocketService } from '../services/websocket';
 import { speechService } from '../services/speechService';
 import { getApiUrl } from '../services/api';
@@ -14,12 +16,8 @@ import type { YogaSession } from '../types/session';
 import { getPoseImage } from '../utils/poseImages';
 import './ActiveSession.css';
 
-// Per-pose score tracking
-export interface PoseScore {
-  poseName: string;
-  scores: number[];
-  averageScore: number;
-}
+// Re-export PoseScore for consumers
+export type { PoseScore };
 
 interface ActiveSessionProps {
   session: YogaSession;
@@ -29,7 +27,6 @@ interface ActiveSessionProps {
 
 const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onExit }) => {
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState(session.poses[0].duration);
   const [isPaused, setIsPaused] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
   const [poseResult, setPoseResult] = useState<PoseDetectionResult | null>(null);
@@ -38,18 +35,38 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   const [sessionStartTime] = useState(Date.now());
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [poseScores, setPoseScores] = useState<PoseScore[]>([]);
 
   const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastSpokenFeedbackRef = useRef<string>('');
-  const currentPoseScoresRef = useRef<number[]>([]);
 
   const currentPose = session.poses[currentPoseIndex];
   const totalPoses = session.poses.length;
 
-  // Use the mobile view toggle hook
+  // Use pose scoring hook
+  const { addScore, resetCurrentScores, savePoseScore } = usePoseScoring();
+
+  // Handle time up - transition to next pose or complete session
+  const handleTimeUp = useCallback(() => {
+    if (currentPoseIndex < totalPoses - 1) {
+      setShowTransition(true);
+    } else {
+      // Session complete - save final pose scores and complete
+      const finalScores = savePoseScore(currentPose.pose_name);
+      const totalTime = Math.floor((Date.now() - sessionStartTime) / 1000);
+      onComplete(totalPoses, totalTime, finalScores);
+    }
+  }, [currentPoseIndex, totalPoses, savePoseScore, currentPose.pose_name, sessionStartTime, onComplete]);
+
+  // Use session timer hook
+  const { timeRemaining, resetTimer } = useSessionTimer({
+    initialTime: session.poses[0].duration,
+    isPaused,
+    isActive: !showTransition,
+    onTimeUp: handleTimeUp,
+  });
+
+  // Use mobile view toggle hook
   const { mobileShowPose } = useMobileViewToggle({
     isPaused,
     showTransition,
@@ -88,51 +105,8 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     return () => {
       wsService.disconnect();
       window.removeEventListener('resize', updateDimensions);
-      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
-
-  // Save pose score helper
-  const savePoseScore = useCallback(() => {
-    const scores = currentPoseScoresRef.current;
-    if (scores.length > 0) {
-      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-      const newPoseScore: PoseScore = {
-        poseName: currentPose.pose_name,
-        scores: [...scores],
-        averageScore: avgScore,
-      };
-      setPoseScores(prev => [...prev, newPoseScore]);
-      return [...poseScores, newPoseScore];
-    }
-    return poseScores;
-  }, [currentPose.pose_name, poseScores]);
-
-  // Timer effect
-  useEffect(() => {
-    if (!isPaused && !showTransition) {
-      timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev <= 1) {
-            if (currentPoseIndex < totalPoses - 1) {
-              setShowTransition(true);
-              return 0;
-            } else {
-              const finalScores = savePoseScore();
-              const totalTime = Math.floor((Date.now() - sessionStartTime) / 1000);
-              onComplete(totalPoses, totalTime, finalScores);
-              return 0;
-            }
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentPoseIndex, isPaused, showTransition, totalPoses, sessionStartTime, onComplete, savePoseScore]);
 
   // Voice: Announce session start
   useEffect(() => {
@@ -166,14 +140,14 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   // Track scores for current pose
   useEffect(() => {
     if (poseResult?.confidence !== undefined) {
-      currentPoseScoresRef.current.push(poseResult.confidence);
+      addScore(poseResult.confidence);
     }
-  }, [poseResult?.confidence]);
+  }, [poseResult?.confidence, addScore]);
 
   // Reset score accumulator when pose changes
   useEffect(() => {
-    currentPoseScoresRef.current = [];
-  }, [currentPoseIndex]);
+    resetCurrentScores();
+  }, [currentPoseIndex, resetCurrentScores]);
 
   const handleFrame = useCallback((imageData: string) => {
     if (wsServiceRef.current && isConnected) {
@@ -182,12 +156,12 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   }, [isConnected, currentPose.pose_name]);
 
   const handleTransitionComplete = useCallback(() => {
-    savePoseScore();
+    savePoseScore(currentPose.pose_name);
     setShowTransition(false);
     const nextIndex = currentPoseIndex + 1;
     setCurrentPoseIndex(nextIndex);
-    setTimeRemaining(session.poses[nextIndex].duration);
-  }, [savePoseScore, currentPoseIndex, session.poses]);
+    resetTimer(session.poses[nextIndex].duration);
+  }, [savePoseScore, currentPose.pose_name, currentPoseIndex, session.poses, resetTimer]);
 
   const handlePause = useCallback(() => {
     setIsPaused(prev => !prev);

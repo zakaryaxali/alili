@@ -15,6 +15,6 @@ export interface PoseDetectionResult {
 
 export interface WebSocketMessage {
   type: 'frame' | 'result' | 'error';
-  data?: any;
+  data?: PoseDetectionResult | string;
   error?: string;
 }
