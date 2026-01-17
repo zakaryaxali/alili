@@ -1,1 +1,0 @@
-- learn what is MediaPipe landmarks (ML)
