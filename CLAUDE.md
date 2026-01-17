@@ -106,3 +106,7 @@ The system uses MediaPipe's 33-point body model. Key indices for pose recognitio
 - Hips: 23 (left), 24 (right)
 - Knees: 25 (left), 26 (right)
 - Ankles: 27 (left), 28 (right)
+
+## Git Conventions
+
+- Do not add `Co-Authored-By` lines to commit messages
