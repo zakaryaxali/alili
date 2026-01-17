@@ -266,17 +266,19 @@
     grid-template-columns: unset;
   }
 
-  /* Mobile top controls - compact icon buttons */
+  /* Mobile top controls - full width to match camera */
   .left-section {
     order: 1;
     gap: 8px;
+    width: 100%;
   }
 
   .session-controls {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-wrap: nowrap;
     justify-content: space-between;
+    width: 100%;
   }
 
   .control-btn {
@@ -299,6 +301,8 @@
     background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 14px 16px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .mobile-pose-thumbnail {
