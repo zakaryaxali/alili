@@ -1,162 +1,108 @@
-# Alili - Yoga Pose Recognition Webapp
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-Full-stack webapp for real-time yoga pose detection, recognition, and quality analysis using computer vision.
+
+Alili is a real-time yoga pose detection webapp using computer vision. Users select body parts to target (pain relief or improvement), and the system generates personalized yoga sessions with live AI feedback on pose quality.
 
 **Tech Stack:**
-- Frontend: Vite + React + TypeScript
+- Frontend: Vite + React 19 + TypeScript
 - Backend: Python 3.12 + FastAPI + MediaPipe
-- Package Manager: uv (fast Python package installer)
-- Communication: WebSocket for real-time video streaming
-- License: Apache 2.0 (SaaS-friendly)
+- Communication: Socket.IO for real-time video streaming
+- Package Manager: uv (backend), npm (frontend)
 
-## Architecture Guidelines
+## Development Commands
 
-### Project Structure
-```
-alili/
-├── frontend/          # Vite React TypeScript app
-│   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── services/     # API/WebSocket services
-│   │   ├── types/        # TypeScript definitions
-│   │   └── utils/        # Helper functions
-│   ├── package.json
-│   └── vite.config.ts
-├── backend/           # FastAPI application
-│   ├── app/
-│   │   ├── main.py          # FastAPI entry point
-│   │   ├── websocket.py     # WebSocket handlers
-│   │   ├── pose_detection.py   # MediaPipe integration
-│   │   ├── pose_recognition.py # Yoga pose matching
-│   │   └── pose_analysis.py    # Quality feedback
-│   ├── pyproject.toml   # uv dependencies
-│   └── uv.lock          # uv lock file
-└── CLAUDE.md          # This file
-```
-
-### Data Flow
-1. Frontend captures video from laptop camera
-2. Video frames sent to backend via WebSocket
-3. Backend processes frames with MediaPipe (33 body landmarks)
-4. Yoga pose recognition compares landmarks with reference poses
-5. Quality analysis provides real-time feedback
-6. Results streamed back to frontend for visualization
-
-## Coding Standards
-
-### Frontend (React + TypeScript)
-- Use functional components with hooks
-- TypeScript strict mode enabled
-- Component naming: PascalCase (e.g., `CameraCapture.tsx`)
-- Use interfaces for all props and state types
-- Error handling for camera permissions and WebSocket connections
-- Responsive design for different screen sizes
-
-### Backend (Python + FastAPI)
-- Follow PEP 8 style guide
-- Type hints for all functions
-- Async/await for WebSocket handlers
-- Error handling for video processing
-- Modular design: separate pose detection, recognition, and analysis
-- Use Pydantic models for data validation
-
-### MediaPipe Integration
-- Use MediaPipe Pose solution (Apache 2.0 license)
-- Process at 30+ FPS for smooth real-time experience
-- Support multi-person detection
-- Return 33 landmark coordinates (x, y, z, visibility)
-
-### Yoga Pose Recognition
-- Store reference poses as joint angle configurations
-- Common poses to implement:
-  - Mountain Pose (Tadasana)
-  - Downward Dog (Adho Mukha Svanasana)
-  - Warrior I, II, III (Virabhadrasana)
-  - Tree Pose (Vrksasana)
-  - Child's Pose (Balasana)
-  - Plank Pose
-- Use cosine similarity or angle differences for matching
-- Confidence threshold: 70%+
-
-### Pose Quality Analysis
-- Check key alignments:
-  - Joint angles (knees, elbows, hips)
-  - Body symmetry (left vs right side)
-  - Balance and stability
-  - Limb extension
-- Provide actionable feedback:
-  - "Straighten your left knee"
-  - "Raise your arms higher"
-  - "Align your hips"
-  - "Keep your back straight"
-
-## Development Workflow
-
-### Running Locally
+### Backend
 ```bash
-# Backend (using uv)
 cd backend
-uv sync  # Creates virtual environment and installs dependencies
-uv run uvicorn app.main:app --reload --port 8000
+uv sync                                          # Install dependencies
+uv run uvicorn app.main:app --reload --port 8000 # Run dev server
+```
 
-# Or activate the venv manually:
-# source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-# uvicorn app.main:app --reload --port 8000
-
-# Frontend (separate terminal)
+### Frontend
+```bash
 cd frontend
-npm install
-npm run dev  # Runs on port 5173 by default
+npm install     # Install dependencies
+npm run dev     # Run dev server (port 5173)
+npm run build   # Build for production
+npm run lint    # Run ESLint
 ```
 
-### Backend Setup with uv
-```bash
-# Initialize uv project
-cd backend
-uv init --python 3.12
+## Architecture
 
-# Add dependencies
-uv add fastapi uvicorn mediapipe opencv-python numpy python-socketio
+### Real-Time Pose Detection Pipeline
 
-# Run commands with uv
-uv run <command>
+```
+Camera → WebSocket → MediaPipe Detection → Pose Recognition → Quality Analysis → Frontend Overlay
 ```
 
-### Environment Variables
-- Frontend: `VITE_API_URL=http://localhost:8000`
-- Backend: No env vars required for local development
+1. **Frontend** (`CameraCapture.tsx`) captures frames, sends base64-encoded JPEG via Socket.IO
+2. **Backend** (`websocket.py`) receives frames, orchestrates the detection pipeline
+3. **PoseDetector** (`pose_detection.py`) uses MediaPipe to extract 33 body landmarks
+4. **YogaPoseRecognizer** (`pose_recognition.py`) compares joint angles against reference poses
+5. **PoseQualityAnalyzer** (`pose_analysis.py`) generates actionable feedback
+6. Results stream back via Socket.IO `pose_result` event
 
-## Best Practices
+### Session Flow
 
-### Performance
-- Limit video frame rate to 15-30 FPS for WebSocket streaming
-- Compress frames before sending (JPEG quality: 80%)
-- Use WebSocket binary frames for efficiency
-- Debounce pose feedback to avoid UI flicker
+The app has 4 screens managed by `App.tsx`:
+1. **BodyPartSelector** - User selects pain/improvement areas
+2. **SessionConfig** - Configure session duration
+3. **ActiveSession** - Live pose detection with timer, feedback, and skeleton overlay
+4. **Complete** - Session summary
 
-### Security
-- Validate all incoming video frames
-- Rate limit WebSocket connections
-- Add CORS configuration for production
-- Never store or log video frames (privacy)
+### Key Backend Modules
 
-### Testing
-- Frontend: Vitest for unit tests
-- Backend: pytest for API and pose detection tests
-- Manual testing with different yoga poses and lighting conditions
+| Module | Purpose |
+|--------|---------|
+| `main.py` | FastAPI app with CORS, mounts Socket.IO |
+| `websocket.py` | Socket.IO handlers for `video_frame` event |
+| `pose_detection.py` | MediaPipe wrapper, base64 image decoding |
+| `pose_recognition.py` | Angle-based pose matching with confidence scores |
+| `pose_analysis.py` | Per-joint feedback generation |
+| `session_generator.py` | Creates session with warmup→peak→cooldown ordering |
+| `body_parts.py` | Pose metadata, body part mappings, asymmetric pose pairs |
 
-## Future Enhancements
-- Session recording and playback
-- Progress tracking over time
-- Multiple camera angles support
-- Mobile app version
-- AI-powered pose correction suggestions
-- Integration with wearables
+### Key Frontend Components
 
-## SaaS Considerations
-- All dependencies use permissive licenses (Apache 2.0, MIT)
-- Scalable WebSocket architecture (consider Redis pub/sub for multi-server)
-- User authentication and session management
-- Usage analytics and monitoring
-- Pricing tiers based on session duration/pose complexity
+| Component | Purpose |
+|-----------|---------|
+| `ActiveSession.tsx` | Main session view, manages WebSocket, timer, pose transitions |
+| `CameraCapture.tsx` | Camera access, frame capture and streaming |
+| `PoseOverlay.tsx` | SVG skeleton overlay on video |
+| `PoseFeedback.tsx` | Displays real-time feedback and accuracy score |
+| `PoseTransition.tsx` | Between-pose transition screen |
+
+### WebSocket Events
+
+- `video_frame` (client→server): `{ image: base64, target_pose?: string }`
+- `pose_result` (server→client): `{ landmarks, poseName, confidence, feedback, timestamp }`
+- `connect_response`, `error`, `disconnect`
+
+### REST Endpoints
+
+- `POST /session/generate` - Create personalized session
+- `POST /session/preview` - Preview session without creating
+- `GET /session/{id}` - Retrieve session
+- `POST /session/{id}/complete` - Mark session complete
+- `GET /session/body-parts/list` - Available body parts
+
+## Adding New Poses
+
+1. Add reference angles to `YogaPoseRecognizer.reference_poses` in `pose_recognition.py`
+2. Add pose metadata (duration, difficulty, targets) to `POSE_METADATA` in `body_parts.py`
+3. Update `BODY_PART_POSES` mappings
+4. For asymmetric poses, add pair to `ASYMMETRIC_POSE_PAIRS`
+5. Categorize in `WARMUP_POSES`, `PEAK_POSES`, or `COOLDOWN_POSES`
+
+## MediaPipe Landmarks
+
+The system uses MediaPipe's 33-point body model. Key indices for pose recognition:
+- Shoulders: 11 (left), 12 (right)
+- Elbows: 13 (left), 14 (right)
+- Wrists: 15 (left), 16 (right)
+- Hips: 23 (left), 24 (right)
+- Knees: 25 (left), 26 (right)
+- Ankles: 27 (left), 28 (right)

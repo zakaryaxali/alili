@@ -1,22 +1,22 @@
 # Alili - Yoga Pose Recognition
 
-Real-time yoga pose detection and quality analysis using computer vision. Get instant feedback on your yoga practice with AI-powered pose recognition.
+Real-time yoga pose detection and quality analysis using computer vision. Get personalized yoga sessions with AI-powered pose recognition and instant feedback.
 
 ## Features
 
+- **Personalized Sessions**: Select body parts for pain relief or improvement, get a customized yoga sequence
 - **Real-time Pose Detection**: Detect human poses at 30+ FPS using MediaPipe
-- **Yoga Pose Recognition**: Recognize 5+ common yoga poses (Mountain, Warrior II, Tree, Downward Dog, Plank)
+- **18 Yoga Poses**: Mountain, Warrior II, Tree, Downward Dog, Plank, and more
 - **Quality Feedback**: Get actionable feedback on pose alignment and form
-- **Multi-person Support**: Detect and analyze multiple people simultaneously
-- **Web-based Interface**: Access from any device with a webcam
+- **Smart Sequencing**: Sessions auto-organized into warmup → peak → cooldown flow
+- **Asymmetric Pose Pairing**: Left/right variations automatically paired
 
 ## Tech Stack
 
-- **Frontend**: Vite + React + TypeScript
+- **Frontend**: Vite + React 19 + TypeScript
 - **Backend**: Python 3.12 + FastAPI + MediaPipe
-- **Package Manager**: uv (fast Python package installer)
-- **Communication**: WebSocket (Socket.IO) for real-time video streaming
-- **License**: Apache 2.0 (SaaS-friendly)
+- **Package Manager**: uv (backend), npm (frontend)
+- **Communication**: Socket.IO for real-time video streaming
 
 ## Prerequisites
 
@@ -30,13 +30,8 @@ Real-time yoga pose detection and quality analysis using computer vision. Get in
 ### Backend Setup
 
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Install dependencies with uv
 uv sync
-
-# Run the server
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
@@ -45,13 +40,8 @@ The backend will be available at `http://localhost:8000`
 ### Frontend Setup
 
 ```bash
-# Navigate to frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run the development server
 npm run dev
 ```
 
@@ -59,96 +49,107 @@ The frontend will be available at `http://localhost:5173`
 
 ## Usage
 
-1. **Start the backend server** (see Backend Setup above)
-2. **Start the frontend dev server** (see Frontend Setup above)
-3. **Open your browser** and navigate to `http://localhost:5173`
-4. **Allow camera access** when prompted
-5. **Click "Start Detection"** to begin real-time pose recognition
-6. **Perform yoga poses** and receive instant feedback
+1. **Start both servers** (backend on port 8000, frontend on port 5173)
+2. **Open your browser** at `http://localhost:5173`
+3. **Select body parts** - Choose areas for pain relief or improvement
+4. **Configure session** - Set your desired duration (10-90 minutes)
+5. **Start session** - Allow camera access and follow the guided poses
+6. **Get feedback** - See real-time skeleton overlay and pose quality feedback
 
 ## Supported Yoga Poses
 
-- **Mountain Pose (Tadasana)**: Basic standing pose
-- **Warrior II (Virabhadrasana II)**: Standing strength pose
-- **Tree Pose (Vrksasana)**: Balance pose
-- **Downward Dog (Adho Mukha Svanasana)**: Inverted V-shape pose
-- **Plank Pose**: Core strengthening pose
+| Pose | Difficulty | Best For |
+|------|------------|----------|
+| Mountain Pose | Easy | Posture, alignment |
+| Easy Seat | Easy | Hips, meditation |
+| Downward Dog | Medium | Back, shoulders, hamstrings |
+| Warrior II (L/R) | Medium | Legs, hips, balance |
+| Tree Pose (L/R) | Medium | Balance, focus |
+| Plank | Hard | Core, shoulders |
+| Reverse Table Top | Hard | Core, chest, wrists |
+| Supine Bound Angle | Easy | Hips, relaxation |
+| Hug the Knees | Easy | Lower back, hips |
+| Janu Sirsasana Twist (L/R) | Medium | Hamstrings, spine |
+| Janu Sirsasana Revolved (L/R) | Medium | Hamstrings, spine |
+| Gomukasana Legs Fold | Medium | Hips, flexibility |
+| Supine Bent Knees | Easy | Lower back, relaxation |
+| Seated Hands Behind Back Stretch | Easy | Shoulders, chest |
 
 ## Project Structure
 
 ```
 alili/
-├── frontend/          # Vite React TypeScript app
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── services/      # WebSocket service
-│   │   ├── types/         # TypeScript definitions
-│   │   └── App.tsx        # Main app component
-│   └── package.json
-├── backend/           # FastAPI application
-│   ├── app/
-│   │   ├── main.py              # FastAPI entry point
-│   │   ├── websocket.py         # WebSocket handlers
-│   │   ├── pose_detection.py   # MediaPipe integration
-│   │   ├── pose_recognition.py # Yoga pose matching
-│   │   └── pose_analysis.py    # Quality feedback
-│   └── pyproject.toml
-└── CLAUDE.md          # Development guidelines
+├── frontend/
+│   └── src/
+│       ├── components/
+│       │   ├── ActiveSession.tsx    # Main session view with camera
+│       │   ├── BodyPartSelector.tsx # Pain/improvement selection
+│       │   ├── SessionConfig.tsx    # Duration configuration
+│       │   ├── CameraCapture.tsx    # Webcam capture
+│       │   ├── PoseOverlay.tsx      # Skeleton visualization
+│       │   └── PoseFeedback.tsx     # Real-time feedback display
+│       ├── services/
+│       │   ├── websocket.ts         # Socket.IO client
+│       │   └── sessionService.ts    # REST API client
+│       └── types/                   # TypeScript definitions
+├── backend/
+│   └── app/
+│       ├── main.py                  # FastAPI entry point
+│       ├── websocket.py             # Socket.IO handlers
+│       ├── pose_detection.py        # MediaPipe integration
+│       ├── pose_recognition.py      # Angle-based pose matching
+│       ├── pose_analysis.py         # Quality feedback generation
+│       ├── session_generator.py     # Personalized session creation
+│       ├── session_routes.py        # Session REST endpoints
+│       └── body_parts.py            # Pose metadata & mappings
+└── CLAUDE.md                        # Development guidelines
 ```
 
-## Development
+## API
 
-See [CLAUDE.md](./CLAUDE.md) for detailed development guidelines, coding standards, and architecture documentation.
+### REST Endpoints
 
-## API Endpoints
-
-### HTTP Endpoints
-
-- `GET /` - API information
-- `GET /health` - Health check
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API info |
+| GET | `/health` | Health check |
+| POST | `/session/generate` | Create personalized session |
+| POST | `/session/preview` | Preview session before creating |
+| GET | `/session/{id}` | Get session details |
+| POST | `/session/{id}/complete` | Mark session complete |
+| GET | `/session/body-parts/list` | List available body parts |
 
 ### WebSocket Events
 
 **Client → Server**:
-- `video_frame`: Send video frame for pose detection
-  ```json
-  { "image": "base64_encoded_jpeg" }
-  ```
+```json
+{
+  "event": "video_frame",
+  "data": {
+    "image": "base64_encoded_jpeg",
+    "target_pose": "Warrior II Left"
+  }
+}
+```
 
 **Server → Client**:
-- `pose_result`: Pose detection results
-  ```json
-  {
+```json
+{
+  "event": "pose_result",
+  "data": {
     "landmarks": [...],
-    "poseName": "Warrior II",
+    "poseName": "Warrior II Left",
     "confidence": 0.85,
     "feedback": ["Great form!", "Keep knee over ankle"],
     "timestamp": 1234567890
   }
-  ```
+}
+```
+
+## Development
+
+See [CLAUDE.md](./CLAUDE.md) for architecture details and development guidelines.
 
 ## License
 
-This project uses the following open-source libraries:
-- MediaPipe: Apache 2.0 License
-- FastAPI: MIT License
-- React: MIT License
-
-All components are compatible with commercial SaaS use.
-
-## Future Enhancements
-
-- Session recording and playback
-- Progress tracking over time
-- Multiple camera angles support
-- Mobile app version
-- Additional yoga poses
-- Integration with wearables
-
-## Contributing
-
-See [CLAUDE.md](./CLAUDE.md) for coding standards and contribution guidelines.
-
-## Support
-
-For issues or questions, please open an issue on the GitHub repository.
+This project uses permissive open-source libraries (Apache 2.0, MIT) compatible with commercial use.
