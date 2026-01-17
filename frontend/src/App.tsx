@@ -77,7 +77,7 @@ function App() {
       {currentScreen === 'selector' && (
         <>
           <header className="app-header">
-            <h1>Alili - Yoga Pose Recognition</h1>
+            <h1>Alili</h1>
             <p>Personalized yoga sessions with real-time AI feedback</p>
           </header>
           <BodyPartSelector onComplete={handleBodyPartsSelected} />
