@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import type { PoseDetectionResult } from '../types/pose';
+import { getApiUrl } from './api';
 
 export class PoseWebSocketService {
   private socket: Socket | null = null;
@@ -8,7 +9,7 @@ export class PoseWebSocketService {
   private connectionReadyResolve: (() => void) | null = null;
   private onConnectionStateChange: ((connected: boolean) => void) | null = null;
 
-  constructor(url: string = 'http://localhost:8000') {
+  constructor(url: string = getApiUrl()) {
     this.url = url;
   }
 

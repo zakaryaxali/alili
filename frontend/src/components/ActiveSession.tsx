@@ -5,6 +5,7 @@ import PoseFeedback from './PoseFeedback';
 import PoseTransition from './PoseTransition';
 import { PoseWebSocketService } from '../services/websocket';
 import { speechService } from '../services/speechService';
+import { getApiUrl } from '../services/api';
 import type { PoseDetectionResult } from '../types/pose';
 import type { YogaSession } from '../types/session';
 import { getPoseImage } from '../utils/poseImages';
@@ -38,9 +39,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   useEffect(() => {
     // Initialize WebSocket
-    const wsService = new PoseWebSocketService(
-      import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    );
+    const wsService = new PoseWebSocketService(getApiUrl());
     wsServiceRef.current = wsService;
 
     // Connect with event-driven connection state tracking
