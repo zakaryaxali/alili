@@ -251,31 +251,129 @@
 
 @media (max-width: 768px) {
   .active-session {
-    padding: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+
+  .session-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    grid-template-columns: unset;
+  }
+
+  /* Mobile top controls - compact icon buttons */
+  .left-section {
+    order: 1;
+    gap: 8px;
   }
 
   .session-controls {
-    flex-wrap: wrap;
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
   }
 
   .control-btn {
+    padding: 8px 12px;
+    font-size: 0.8em;
+    min-width: unset;
     flex: 1;
-    min-width: 120px;
+    border-radius: 8px;
   }
 
-  .info-main {
-    font-size: 1.2em;
+  .connection-status {
+    display: none; /* Hide in controls, show at bottom */
   }
 
-  .info-sub {
-    font-size: 0.9em;
-  }
-
-  .pose-name-card {
+  /* Pose info row - compact with thumbnail */
+  .mobile-pose-header {
+    display: flex;
+    align-items: center;
     gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 12px;
   }
 
+  .mobile-pose-thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .mobile-pose-info {
+    flex: 1;
+  }
+
+  .mobile-pose-name {
+    font-size: 1em;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .mobile-pose-progress {
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  /* Hide desktop-only elements */
+  .info-card.pose-name-card,
+  .reference-image,
   .pose-tags {
+    display: none;
+  }
+
+  /* Camera section - portrait, takes most space */
+  .right-section {
+    order: 2;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .video-wrapper {
+    flex: 1;
+    aspect-ratio: unset;
+    min-height: 200px;
+    border-radius: 12px;
+  }
+
+  /* Form check at bottom */
+  .feedback-content {
+    order: 3;
+  }
+
+  /* Mobile connection status at bottom */
+  .mobile-connection-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 6px;
+    font-size: 0.75em;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 4px 0;
+  }
+
+  .mobile-connection-status .status-indicator {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+/* Hide mobile-only elements on desktop */
+@media (min-width: 769px) {
+  .mobile-pose-header,
+  .mobile-connection-status {
+    display: none;
   }
 }

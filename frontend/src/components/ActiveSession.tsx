@@ -204,21 +204,36 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               className="control-btn skip-btn"
               disabled={currentPoseIndex >= totalPoses - 1}
             >
-              Skip pose
+              Skip
             </button>
             <button
               onClick={() => setVoiceEnabled(!voiceEnabled)}
               className={`control-btn voice-btn ${voiceEnabled ? 'voice-on' : 'voice-off'}`}
               title={voiceEnabled ? 'Mute voice guidance' : 'Enable voice guidance'}
             >
-              {voiceEnabled ? 'Voice On' : 'Voice Off'}
+              {voiceEnabled ? 'Voice' : 'Muted'}
             </button>
             <button onClick={onExit} className="control-btn exit-btn">
-              Exit Session
+              Exit
             </button>
             <div className="connection-status">
               <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
               <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+            </div>
+          </div>
+
+          {/* Mobile-only pose header with thumbnail */}
+          <div className="mobile-pose-header">
+            <img
+              src={getPoseImage(currentPose.pose_name)}
+              alt={currentPose.pose_name}
+              className="mobile-pose-thumbnail"
+            />
+            <div className="mobile-pose-info">
+              <div className="mobile-pose-name">{currentPose.pose_name}</div>
+              <div className="mobile-pose-progress">
+                Pose {currentPoseIndex + 1} of {totalPoses} • {timeRemaining}s
+              </div>
             </div>
           </div>
           <div className="info-card pose-name-card">
@@ -279,6 +294,12 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               feedback={poseResult?.feedback || []}
               accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
             />
+          </div>
+
+          {/* Mobile-only connection status */}
+          <div className="mobile-connection-status">
+            <div className={`status-indicator ${isConnected ? 'connected' : 'disconnected'}`} />
+            <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
           </div>
         </div>
       </div>
