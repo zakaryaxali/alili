@@ -1,6 +1,7 @@
 import base64
 import json
 import re
+
 from google import genai
 from google.genai import types
 
@@ -11,14 +12,10 @@ class GeminiPoseAnalyzer:
     def __init__(self, api_key: str):
         """Initialize the Gemini analyzer with API key."""
         self.client = genai.Client(api_key=api_key)
-        self.model = 'gemini-2.0-flash'
+        self.model = "gemini-2.0-flash"
 
     async def analyze_pose(
-        self,
-        image_base64: str,
-        target_pose: str,
-        confidence: float,
-        angle_breakdown: dict
+        self, image_base64: str, target_pose: str, confidence: float, angle_breakdown: dict
     ) -> list[str]:
         """
         Analyze pose using Gemini Vision and return feedback.
@@ -51,16 +48,14 @@ Do not include any other text outside the JSON array."""
         try:
             # Create image part from base64 data
             image_part = types.Part.from_bytes(
-                data=base64.b64decode(image_base64),
-                mime_type="image/jpeg"
+                data=base64.b64decode(image_base64), mime_type="image/jpeg"
             )
 
             print(f"[GEMINI] Calling API for pose: {target_pose} (confidence: {confidence:.0%})")
 
             # Use async client for non-blocking API call
             response = await self.client.aio.models.generate_content(
-                model=self.model,
-                contents=[prompt, image_part]
+                model=self.model, contents=[prompt, image_part]
             )
 
             feedback = self._parse_feedback(response.text)
@@ -78,16 +73,20 @@ Do not include any other text outside the JSON array."""
 
         lines = []
         for joint, data in angle_breakdown.items():
-            joint_name = joint.replace('_', ' ').title()
-            status = data.get('status', 'unknown')
-            current = data.get('current', 0)
-            target = data.get('target', 0)
-            diff = data.get('difference', 0)
+            joint_name = joint.replace("_", " ").title()
+            status = data.get("status", "unknown")
+            current = data.get("current", 0)
+            target = data.get("target", 0)
+            diff = data.get("difference", 0)
 
-            status_emoji = '✓' if status == 'good' else '!' if status == 'needs_improvement' else '✗'
-            lines.append(f"  {status_emoji} {joint_name}: {current:.0f}° (target: {target}°, off by {diff:.0f}°)")
+            status_emoji = (
+                "✓" if status == "good" else "!" if status == "needs_improvement" else "✗"
+            )
+            lines.append(
+                f"  {status_emoji} {joint_name}: {current:.0f}° (target: {target}°, off by {diff:.0f}°)"
+            )
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _parse_feedback(self, response_text: str) -> list[str]:
         """Parse JSON array response from Gemini."""
@@ -97,9 +96,9 @@ Do not include any other text outside the JSON array."""
             text = response_text.strip()
 
             # Remove markdown code block if present
-            if text.startswith('```'):
-                text = re.sub(r'^```(?:json)?\n?', '', text)
-                text = re.sub(r'\n?```$', '', text)
+            if text.startswith("```"):
+                text = re.sub(r"^```(?:json)?\n?", "", text)
+                text = re.sub(r"\n?```$", "", text)
 
             # Parse the JSON array
             feedback = json.loads(text)

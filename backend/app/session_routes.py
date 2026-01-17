@@ -2,25 +2,27 @@
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from typing import List, Dict, Optional
-from .session_generator import generate_session, get_session_preview
+
 from .body_parts import BODY_PART_POSES
+from .session_generator import generate_session, get_session_preview
 
 router = APIRouter(prefix="/session", tags=["session"])
 
 # In-memory storage (replace with database in production)
-sessions_db: Dict[str, Dict] = {}
+sessions_db: dict[str, dict] = {}
 
 
 class SessionGenerateRequest(BaseModel):
     """Request to generate a new yoga session"""
-    pain_areas: List[str] = Field(default=[], description="Body parts experiencing pain")
-    improvement_areas: List[str] = Field(default=[], description="Body parts to improve")
+
+    pain_areas: list[str] = Field(default=[], description="Body parts experiencing pain")
+    improvement_areas: list[str] = Field(default=[], description="Body parts to improve")
     duration_minutes: int = Field(ge=10, le=90, description="Session duration in minutes")
 
 
 class SessionPose(BaseModel):
     """Individual pose in a session"""
+
     pose_name: str
     duration: int
     order: int
@@ -30,16 +32,18 @@ class SessionPose(BaseModel):
 
 class SessionResponse(BaseModel):
     """Yoga session response"""
+
     id: str
-    poses: List[SessionPose]
+    poses: list[SessionPose]
     total_duration: int
     num_poses: int
-    pain_areas: List[str]
-    improvement_areas: List[str]
+    pain_areas: list[str]
+    improvement_areas: list[str]
 
 
 class SessionPreviewResponse(BaseModel):
     """Preview of session before generation"""
+
     estimated_poses: int
     targets_pain: bool
     targets_improvement: bool
@@ -47,6 +51,7 @@ class SessionPreviewResponse(BaseModel):
 
 class SessionCompleteRequest(BaseModel):
     """Request to mark a session as completed"""
+
     completed_poses: int = Field(description="Number of poses actually completed")
     total_time: int = Field(description="Actual session duration in seconds")
 
@@ -66,11 +71,11 @@ async def create_session(request: SessionGenerateRequest):
         session = generate_session(
             pain_areas=request.pain_areas,
             improvement_areas=request.improvement_areas,
-            duration_minutes=request.duration_minutes
+            duration_minutes=request.duration_minutes,
         )
 
         # Store session in memory
-        sessions_db[session['id']] = session
+        sessions_db[session["id"]] = session
 
         return session
 
@@ -91,8 +96,7 @@ async def preview_session(request: SessionGenerateRequest):
     """
     try:
         preview = get_session_preview(
-            pain_areas=request.pain_areas,
-            improvement_areas=request.improvement_areas
+            pain_areas=request.pain_areas, improvement_areas=request.improvement_areas
         )
         return preview
 
@@ -133,15 +137,15 @@ async def complete_session(session_id: str, request: SessionCompleteRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = sessions_db[session_id]
-    session['completed'] = True
-    session['completed_poses'] = request.completed_poses
-    session['actual_duration'] = request.total_time
+    session["completed"] = True
+    session["completed_poses"] = request.completed_poses
+    session["actual_duration"] = request.total_time
 
     return {
         "message": "Session completed successfully",
         "session_id": session_id,
         "completed_poses": request.completed_poses,
-        "total_poses": session['num_poses']
+        "total_poses": session["num_poses"],
     }
 
 
@@ -153,6 +157,4 @@ async def list_body_parts():
     Returns:
         List of body part names
     """
-    return {
-        "body_parts": list(BODY_PART_POSES.keys())
-    }
+    return {"body_parts": list(BODY_PART_POSES.keys())}

@@ -1,6 +1,4 @@
-import numpy as np
-from typing import List, Dict, Tuple, Optional
-import math
+from .utils.geometry import calculate_angle
 
 
 class YogaPoseRecognizer:
@@ -9,179 +7,154 @@ class YogaPoseRecognizer:
     def __init__(self):
         # Define reference poses with key angle configurations
         self.reference_poses = {
-            'Mountain Pose': {
-                'angles': {
-                    'left_elbow': 180,
-                    'right_elbow': 180,
-                    'left_knee': 180,
-                    'right_knee': 180,
-                    'left_hip': 180,
-                    'right_hip': 180
+            "Mountain Pose": {
+                "angles": {
+                    "left_elbow": 180,
+                    "right_elbow": 180,
+                    "left_knee": 180,
+                    "right_knee": 180,
+                    "left_hip": 180,
+                    "right_hip": 180,
                 },
-                'tolerance': 20
+                "tolerance": 20,
             },
-            'Warrior II Left': {
-                'angles': {
-                    'left_knee': 90,      # Front leg bent
-                    'right_knee': 180,    # Back leg straight
-                    'left_shoulder': 90,
-                    'right_shoulder': 90
+            "Warrior II Left": {
+                "angles": {
+                    "left_knee": 90,  # Front leg bent
+                    "right_knee": 180,  # Back leg straight
+                    "left_shoulder": 90,
+                    "right_shoulder": 90,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Warrior II Right': {
-                'angles': {
-                    'left_knee': 180,     # Back leg straight
-                    'right_knee': 90,     # Front leg bent
-                    'left_shoulder': 90,
-                    'right_shoulder': 90
+            "Warrior II Right": {
+                "angles": {
+                    "left_knee": 180,  # Back leg straight
+                    "right_knee": 90,  # Front leg bent
+                    "left_shoulder": 90,
+                    "right_shoulder": 90,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Tree Pose Left': {
-                'angles': {
-                    'left_knee': 180,     # Standing leg straight
-                    'right_knee': 90,     # Raised leg bent
-                    'left_hip': 180,
-                    'right_hip': 45
+            "Tree Pose Left": {
+                "angles": {
+                    "left_knee": 180,  # Standing leg straight
+                    "right_knee": 90,  # Raised leg bent
+                    "left_hip": 180,
+                    "right_hip": 45,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Tree Pose Right': {
-                'angles': {
-                    'left_knee': 90,      # Raised leg bent
-                    'right_knee': 180,    # Standing leg straight
-                    'left_hip': 45,
-                    'right_hip': 180
+            "Tree Pose Right": {
+                "angles": {
+                    "left_knee": 90,  # Raised leg bent
+                    "right_knee": 180,  # Standing leg straight
+                    "left_hip": 45,
+                    "right_hip": 180,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Downward Dog': {
-                'angles': {
-                    'left_hip': 45,
-                    'right_hip': 45,
-                    'left_knee': 180,
-                    'right_knee': 180,
-                    'left_shoulder': 180,
-                    'right_shoulder': 180
+            "Downward Dog": {
+                "angles": {
+                    "left_hip": 45,
+                    "right_hip": 45,
+                    "left_knee": 180,
+                    "right_knee": 180,
+                    "left_shoulder": 180,
+                    "right_shoulder": 180,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Plank': {
-                'angles': {
-                    'left_elbow': 180,
-                    'right_elbow': 180,
-                    'left_hip': 180,
-                    'right_hip': 180,
-                    'left_knee': 180,
-                    'right_knee': 180
+            "Plank": {
+                "angles": {
+                    "left_elbow": 180,
+                    "right_elbow": 180,
+                    "left_hip": 180,
+                    "right_hip": 180,
+                    "left_knee": 180,
+                    "right_knee": 180,
                 },
-                'tolerance': 15
+                "tolerance": 15,
             },
-            'Supine Bound Angle': {
-                'angles': {
-                    'left_knee': 55,
-                    'right_knee': 55,
-                    'left_hip': 55,
-                    'right_hip': 55
-                },
-                'tolerance': 20
+            "Supine Bound Angle": {
+                "angles": {"left_knee": 55, "right_knee": 55, "left_hip": 55, "right_hip": 55},
+                "tolerance": 20,
             },
-            'Hug the Knees': {
-                'angles': {
-                    'left_knee': 50,
-                    'right_knee': 50,
-                    'left_hip': 50,
-                    'right_hip': 50
-                },
-                'tolerance': 20
+            "Hug the Knees": {
+                "angles": {"left_knee": 50, "right_knee": 50, "left_hip": 50, "right_hip": 50},
+                "tolerance": 20,
             },
-            'Easy Seat': {
-                'angles': {
-                    'left_knee': 90,
-                    'right_knee': 90,
-                    'left_hip': 90,
-                    'right_hip': 90
-                },
-                'tolerance': 25
+            "Easy Seat": {
+                "angles": {"left_knee": 90, "right_knee": 90, "left_hip": 90, "right_hip": 90},
+                "tolerance": 25,
             },
-            'Seated Hands Behind Back Stretch': {
-                'angles': {
-                    'left_elbow': 165,
-                    'right_elbow': 165,
-                    'left_shoulder': 35,
-                    'right_shoulder': 35
+            "Seated Hands Behind Back Stretch": {
+                "angles": {
+                    "left_elbow": 165,
+                    "right_elbow": 165,
+                    "left_shoulder": 35,
+                    "right_shoulder": 35,
                 },
-                'tolerance': 20
+                "tolerance": 20,
             },
-            'Gomukasana Legs Fold': {
-                'angles': {
-                    'left_knee': 90,
-                    'right_knee': 90,
-                    'left_hip': 85,
-                    'right_hip': 85
-                },
-                'tolerance': 20
+            "Gomukasana Legs Fold": {
+                "angles": {"left_knee": 90, "right_knee": 90, "left_hip": 85, "right_hip": 85},
+                "tolerance": 20,
             },
-            'Janu Sirsasana Twist Left': {
-                'angles': {
-                    'left_knee': 180,     # Extended leg
-                    'right_knee': 90,     # Bent leg
-                    'left_hip': 90,
-                    'right_hip': 90
+            "Janu Sirsasana Twist Left": {
+                "angles": {
+                    "left_knee": 180,  # Extended leg
+                    "right_knee": 90,  # Bent leg
+                    "left_hip": 90,
+                    "right_hip": 90,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Janu Sirsasana Twist Right': {
-                'angles': {
-                    'left_knee': 90,      # Bent leg
-                    'right_knee': 180,    # Extended leg
-                    'left_hip': 90,
-                    'right_hip': 90
+            "Janu Sirsasana Twist Right": {
+                "angles": {
+                    "left_knee": 90,  # Bent leg
+                    "right_knee": 180,  # Extended leg
+                    "left_hip": 90,
+                    "right_hip": 90,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Janu Sirsasana Revolved Left': {
-                'angles': {
-                    'left_knee': 180,     # Extended leg
-                    'right_knee': 90,     # Bent leg
-                    'left_hip': 70,
-                    'right_hip': 90
+            "Janu Sirsasana Revolved Left": {
+                "angles": {
+                    "left_knee": 180,  # Extended leg
+                    "right_knee": 90,  # Bent leg
+                    "left_hip": 70,
+                    "right_hip": 90,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Janu Sirsasana Revolved Right': {
-                'angles': {
-                    'left_knee': 90,      # Bent leg
-                    'right_knee': 180,    # Extended leg
-                    'left_hip': 90,
-                    'right_hip': 70
+            "Janu Sirsasana Revolved Right": {
+                "angles": {
+                    "left_knee": 90,  # Bent leg
+                    "right_knee": 180,  # Extended leg
+                    "left_hip": 90,
+                    "right_hip": 70,
                 },
-                'tolerance': 25
+                "tolerance": 25,
             },
-            'Reverse Table Top': {
-                'angles': {
-                    'left_elbow': 180,
-                    'right_elbow': 180,
-                    'left_hip': 90,
-                    'right_hip': 90,
-                    'left_shoulder': 90,
-                    'right_shoulder': 90
+            "Reverse Table Top": {
+                "angles": {
+                    "left_elbow": 180,
+                    "right_elbow": 180,
+                    "left_hip": 90,
+                    "right_hip": 90,
+                    "left_shoulder": 90,
+                    "right_shoulder": 90,
                 },
-                'tolerance': 20
+                "tolerance": 20,
             },
-            'Supine Bent Knees': {
-                'angles': {
-                    'left_knee': 90,
-                    'right_knee': 90,
-                    'left_hip': 90,
-                    'right_hip': 90
-                },
-                'tolerance': 20
-            }
+            "Supine Bent Knees": {
+                "angles": {"left_knee": 90, "right_knee": 90, "left_hip": 90, "right_hip": 90},
+                "tolerance": 20,
+            },
         }
 
-    def recognize(self, landmarks: List[Dict]) -> Tuple[str, float]:
+    def recognize(self, landmarks: list[dict]) -> tuple[str, float]:
         """
         Recognize the yoga pose from landmarks.
 
@@ -203,9 +176,7 @@ class YogaPoseRecognizer:
 
         for pose_name, config in self.reference_poses.items():
             confidence = self._calculate_similarity(
-                current_angles,
-                config['angles'],
-                config['tolerance']
+                current_angles, config["angles"], config["tolerance"]
             )
 
             if confidence > best_confidence:
@@ -218,7 +189,7 @@ class YogaPoseRecognizer:
 
         return best_match, best_confidence
 
-    def evaluate_target_pose(self, landmarks: List[Dict], target_pose: str) -> Tuple[float, Dict]:
+    def evaluate_target_pose(self, landmarks: list[dict], target_pose: str) -> tuple[float, dict]:
         """
         Evaluate how well current pose matches a specific target pose.
 
@@ -242,15 +213,11 @@ class YogaPoseRecognizer:
 
         # Get reference pose configuration
         reference_config = self.reference_poses[target_pose]
-        reference_angles = reference_config['angles']
-        tolerance = reference_config['tolerance']
+        reference_angles = reference_config["angles"]
+        tolerance = reference_config["tolerance"]
 
         # Calculate overall confidence
-        confidence = self._calculate_similarity(
-            current_angles,
-            reference_angles,
-            tolerance
-        )
+        confidence = self._calculate_similarity(current_angles, reference_angles, tolerance)
 
         # Build detailed angle breakdown
         angle_breakdown = {}
@@ -261,98 +228,72 @@ class YogaPoseRecognizer:
 
                 # Determine status based on difference
                 if diff <= tolerance:
-                    status = 'good'
+                    status = "good"
                 elif diff <= tolerance * 1.5:
-                    status = 'needs_improvement'
+                    status = "needs_improvement"
                 else:
-                    status = 'poor'
+                    status = "poor"
 
                 angle_breakdown[joint] = {
-                    'current': round(current_angle, 1),
-                    'target': ref_angle,
-                    'difference': round(diff, 1),
-                    'status': status
+                    "current": round(current_angle, 1),
+                    "target": ref_angle,
+                    "difference": round(diff, 1),
+                    "status": status,
                 }
 
         return confidence, angle_breakdown
 
-    def _calculate_angles(self, landmarks: List[Dict]) -> Dict[str, float]:
+    def _calculate_angles(self, landmarks: list[dict]) -> dict[str, float]:
         """Calculate key joint angles from landmarks"""
         angles = {}
 
         # Left elbow angle
-        angles['left_elbow'] = self._calculate_angle(
-            landmarks[11], landmarks[13], landmarks[15]  # shoulder, elbow, wrist
+        angles["left_elbow"] = calculate_angle(
+            landmarks[11],
+            landmarks[13],
+            landmarks[15],  # shoulder, elbow, wrist
         )
 
         # Right elbow angle
-        angles['right_elbow'] = self._calculate_angle(
-            landmarks[12], landmarks[14], landmarks[16]
-        )
+        angles["right_elbow"] = calculate_angle(landmarks[12], landmarks[14], landmarks[16])
 
         # Left knee angle
-        angles['left_knee'] = self._calculate_angle(
-            landmarks[23], landmarks[25], landmarks[27]  # hip, knee, ankle
+        angles["left_knee"] = calculate_angle(
+            landmarks[23],
+            landmarks[25],
+            landmarks[27],  # hip, knee, ankle
         )
 
         # Right knee angle
-        angles['right_knee'] = self._calculate_angle(
-            landmarks[24], landmarks[26], landmarks[28]
-        )
+        angles["right_knee"] = calculate_angle(landmarks[24], landmarks[26], landmarks[28])
 
         # Left hip angle
-        angles['left_hip'] = self._calculate_angle(
-            landmarks[11], landmarks[23], landmarks[25]  # shoulder, hip, knee
+        angles["left_hip"] = calculate_angle(
+            landmarks[11],
+            landmarks[23],
+            landmarks[25],  # shoulder, hip, knee
         )
 
         # Right hip angle
-        angles['right_hip'] = self._calculate_angle(
-            landmarks[12], landmarks[24], landmarks[26]
-        )
+        angles["right_hip"] = calculate_angle(landmarks[12], landmarks[24], landmarks[26])
 
         # Left shoulder angle
-        angles['left_shoulder'] = self._calculate_angle(
-            landmarks[13], landmarks[11], landmarks[23]  # elbow, shoulder, hip
+        angles["left_shoulder"] = calculate_angle(
+            landmarks[13],
+            landmarks[11],
+            landmarks[23],  # elbow, shoulder, hip
         )
 
         # Right shoulder angle
-        angles['right_shoulder'] = self._calculate_angle(
-            landmarks[14], landmarks[12], landmarks[24]
-        )
+        angles["right_shoulder"] = calculate_angle(landmarks[14], landmarks[12], landmarks[24])
 
         return angles
 
-    def _calculate_angle(
-        self,
-        point1: Dict,
-        point2: Dict,
-        point3: Dict
-    ) -> float:
-        """
-        Calculate angle between three points.
-
-        Args:
-            point1, point2, point3: Landmark dictionaries (point2 is the vertex)
-
-        Returns:
-            Angle in degrees
-        """
-        # Create vectors
-        v1 = np.array([point1['x'] - point2['x'], point1['y'] - point2['y']])
-        v2 = np.array([point3['x'] - point2['x'], point3['y'] - point2['y']])
-
-        # Calculate angle
-        cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-6)
-        cos_angle = np.clip(cos_angle, -1.0, 1.0)
-        angle = np.arccos(cos_angle)
-
-        return np.degrees(angle)
-
     def _calculate_similarity(
         self,
-        current_angles: Dict[str, float],
-        reference_angles: Dict[str, float],
-        tolerance: float
+        current_angles: dict[str, float],
+        reference_angles: dict[str, float],
+        tolerance: float,
     ) -> float:
         """
         Calculate similarity between current and reference angles.

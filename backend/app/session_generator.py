@@ -1,23 +1,20 @@
 """Session generation with smart duration scaling"""
 
-from typing import List, Dict
 import uuid
+
 from .body_parts import (
+    COOLDOWN_POSES,
     POSE_METADATA,
+    WARMUP_POSES,
+    get_pose_pair,
     get_poses_for_body_parts,
     is_asymmetric_pose,
-    get_pose_pair,
-    WARMUP_POSES,
-    PEAK_POSES,
-    COOLDOWN_POSES
 )
 
 
 def generate_session(
-    pain_areas: List[str],
-    improvement_areas: List[str],
-    duration_minutes: int
-) -> Dict:
+    pain_areas: list[str], improvement_areas: list[str], duration_minutes: int
+) -> dict:
     """
     Generate a personalized yoga session
 
@@ -40,20 +37,26 @@ def generate_session(
     for pose in pain_poses:
         if pose not in selected_poses:
             selected_poses.append(pose)
-            pose_tags[pose] = 'pain'
+            pose_tags[pose] = "pain"
 
     for pose in improvement_poses:
         if pose not in selected_poses:
             selected_poses.append(pose)
-            pose_tags[pose] = 'improvement'
+            pose_tags[pose] = "improvement"
 
     # If no poses selected, use a balanced default sequence
     if not selected_poses:
         selected_poses = [
-            'Mountain Pose', 'Downward Dog', 'Warrior II Left', 'Warrior II Right',
-            'Tree Pose Left', 'Tree Pose Right', 'Easy Seat', 'Supine Bent Knees'
+            "Mountain Pose",
+            "Downward Dog",
+            "Warrior II Left",
+            "Warrior II Right",
+            "Tree Pose Left",
+            "Tree Pose Right",
+            "Easy Seat",
+            "Supine Bent Knees",
         ]
-        pose_tags = {pose: 'general' for pose in selected_poses}
+        pose_tags = dict.fromkeys(selected_poses, "general")
 
     # 2. Auto-pair asymmetrical poses
     final_poses = []
@@ -85,20 +88,20 @@ def generate_session(
     total_base_duration = 0
 
     for pose in ordered_poses:
-        base_duration = POSE_METADATA[pose]['base_duration']
+        base_duration = POSE_METADATA[pose]["base_duration"]
 
         # Add pain bonus (+30 seconds)
-        if pose_tags.get(pose) == 'pain':
-            duration = base_duration + 30
-        else:
-            duration = base_duration
+        is_pain_target = pose_tags.get(pose) == "pain"
+        duration = base_duration + 30 if is_pain_target else base_duration
 
-        pose_durations.append({
-            'name': pose,
-            'duration': duration,
-            'is_pain_target': pose_tags.get(pose) == 'pain',
-            'is_improvement_target': pose_tags.get(pose) == 'improvement'
-        })
+        pose_durations.append(
+            {
+                "name": pose,
+                "duration": duration,
+                "is_pain_target": is_pain_target,
+                "is_improvement_target": pose_tags.get(pose) == "improvement",
+            }
+        )
         total_base_duration += duration
 
     # 5. Scale durations to fit session time
@@ -110,31 +113,31 @@ def generate_session(
         scale_factor = available_time / total_base_duration
 
         for pose_data in pose_durations:
-            pose_data['duration'] = int(pose_data['duration'] * scale_factor)
+            pose_data["duration"] = int(pose_data["duration"] * scale_factor)
 
     # 6. Create session object
     session = {
-        'id': str(uuid.uuid4()),
-        'poses': [
+        "id": str(uuid.uuid4()),
+        "poses": [
             {
-                'pose_name': p['name'],
-                'duration': p['duration'],
-                'order': idx + 1,
-                'is_pain_target': p['is_pain_target'],
-                'is_improvement_target': p['is_improvement_target']
+                "pose_name": p["name"],
+                "duration": p["duration"],
+                "order": idx + 1,
+                "is_pain_target": p["is_pain_target"],
+                "is_improvement_target": p["is_improvement_target"],
             }
             for idx, p in enumerate(pose_durations)
         ],
-        'total_duration': duration_minutes,
-        'num_poses': len(pose_durations),
-        'pain_areas': pain_areas,
-        'improvement_areas': improvement_areas
+        "total_duration": duration_minutes,
+        "num_poses": len(pose_durations),
+        "pain_areas": pain_areas,
+        "improvement_areas": improvement_areas,
     }
 
     return session
 
 
-def _order_poses(poses: List[str]) -> List[str]:
+def _order_poses(poses: list[str]) -> list[str]:
     """Order poses in a logical flow: warmup → peak → cooldown"""
     warmup = []
     peak = []
@@ -150,28 +153,25 @@ def _order_poses(poses: List[str]) -> List[str]:
 
     # Ensure at least one warmup and cooldown
     if not warmup and poses:
-        if 'Mountain Pose' in poses:
-            warmup.append('Mountain Pose')
-            peak = [p for p in peak if p != 'Mountain Pose']
-        elif 'Easy Seat' in poses:
-            warmup.append('Easy Seat')
-            peak = [p for p in peak if p != 'Easy Seat']
+        if "Mountain Pose" in poses:
+            warmup.append("Mountain Pose")
+            peak = [p for p in peak if p != "Mountain Pose"]
+        elif "Easy Seat" in poses:
+            warmup.append("Easy Seat")
+            peak = [p for p in peak if p != "Easy Seat"]
 
     if not cooldown and poses:
-        if 'Supine Bent Knees' in poses:
-            cooldown.append('Supine Bent Knees')
-            peak = [p for p in peak if p != 'Supine Bent Knees']
-        elif 'Easy Seat' in poses and 'Easy Seat' not in warmup:
-            cooldown.append('Easy Seat')
-            peak = [p for p in peak if p != 'Easy Seat']
+        if "Supine Bent Knees" in poses:
+            cooldown.append("Supine Bent Knees")
+            peak = [p for p in peak if p != "Supine Bent Knees"]
+        elif "Easy Seat" in poses and "Easy Seat" not in warmup:
+            cooldown.append("Easy Seat")
+            peak = [p for p in peak if p != "Easy Seat"]
 
     return warmup + peak + cooldown
 
 
-def get_session_preview(
-    pain_areas: List[str],
-    improvement_areas: List[str]
-) -> Dict:
+def get_session_preview(pain_areas: list[str], improvement_areas: list[str]) -> dict:
     """
     Get a preview of how many poses would be in a session
 
@@ -207,7 +207,7 @@ def get_session_preview(
             counted.add(pose)
 
     return {
-        'estimated_poses': max(estimated_poses, 5),  # Minimum 5 poses
-        'targets_pain': len(pain_poses) > 0,
-        'targets_improvement': len(improvement_poses) > 0
+        "estimated_poses": max(estimated_poses, 5),  # Minimum 5 poses
+        "targets_pain": len(pain_poses) > 0,
+        "targets_improvement": len(improvement_poses) > 0,
     }

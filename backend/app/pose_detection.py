@@ -1,7 +1,6 @@
-import mediapipe as mp
 import cv2
+import mediapipe as mp
 import numpy as np
-from typing import List, Dict, Optional
 
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
@@ -10,20 +9,16 @@ mp_drawing = mp.solutions.drawing_utils
 class PoseDetector:
     """MediaPipe-based pose detection"""
 
-    def __init__(
-        self,
-        min_detection_confidence: float = 0.5,
-        min_tracking_confidence: float = 0.5
-    ):
+    def __init__(self, min_detection_confidence: float = 0.5, min_tracking_confidence: float = 0.5):
         self.pose = mp_pose.Pose(
             static_image_mode=False,
             model_complexity=1,
             enable_segmentation=False,
             min_detection_confidence=min_detection_confidence,
-            min_tracking_confidence=min_tracking_confidence
+            min_tracking_confidence=min_tracking_confidence,
         )
 
-    def detect(self, image: np.ndarray) -> Optional[Dict]:
+    def detect(self, image: np.ndarray) -> dict | None:
         """
         Detect pose landmarks in an image.
 
@@ -48,31 +43,32 @@ class PoseDetector:
         # Extract landmarks
         landmarks = []
         for landmark in results.pose_landmarks.landmark:
-            landmarks.append({
-                'x': landmark.x,
-                'y': landmark.y,
-                'z': landmark.z,
-                'visibility': landmark.visibility
-            })
+            landmarks.append(
+                {
+                    "x": landmark.x,
+                    "y": landmark.y,
+                    "z": landmark.z,
+                    "visibility": landmark.visibility,
+                }
+            )
 
-        return {
-            'landmarks': landmarks,
-            'world_landmarks': self._extract_world_landmarks(results)
-        }
+        return {"landmarks": landmarks, "world_landmarks": self._extract_world_landmarks(results)}
 
-    def _extract_world_landmarks(self, results) -> Optional[List[Dict]]:
+    def _extract_world_landmarks(self, results) -> list[dict] | None:
         """Extract world landmarks (3D coordinates in meters)"""
         if not results.pose_world_landmarks:
             return None
 
         world_landmarks = []
         for landmark in results.pose_world_landmarks.landmark:
-            world_landmarks.append({
-                'x': landmark.x,
-                'y': landmark.y,
-                'z': landmark.z,
-                'visibility': landmark.visibility
-            })
+            world_landmarks.append(
+                {
+                    "x": landmark.x,
+                    "y": landmark.y,
+                    "z": landmark.z,
+                    "visibility": landmark.visibility,
+                }
+            )
 
         return world_landmarks
 
