@@ -11,9 +11,16 @@ import type { YogaSession } from '../types/session';
 import { getPoseImage } from '../utils/poseImages';
 import './ActiveSession.css';
 
+// Per-pose score tracking
+export interface PoseScore {
+  poseName: string;
+  scores: number[]; // All scores collected during the pose
+  averageScore: number;
+}
+
 interface ActiveSessionProps {
   session: YogaSession;
-  onComplete: (completedPoses: number, totalTime: number) => void;
+  onComplete: (completedPoses: number, totalTime: number, poseScores: PoseScore[]) => void;
   onExit: () => void;
 }
 
@@ -34,12 +41,14 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
   const [videoDimensions, setVideoDimensions] = useState({ width: 1280, height: 720 });
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [mobileShowPose, setMobileShowPose] = useState(true); // Start showing pose
+  const [poseScores, setPoseScores] = useState<PoseScore[]>([]);
 
   const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastSpokenFeedbackRef = useRef<string>('');
   const mobileViewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentPoseScoresRef = useRef<number[]>([]); // Accumulate scores for current pose
 
   const currentPose = session.poses[currentPoseIndex];
   const totalPoses = session.poses.length;
@@ -100,9 +109,10 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               setShowTransition(true);
               return 0;
             } else {
-              // Session complete
+              // Session complete - save final pose scores and complete
+              const finalScores = savePoseScore();
               const totalTime = Math.floor((Date.now() - sessionStartTime) / 1000);
-              onComplete(totalPoses, totalTime);
+              onComplete(totalPoses, totalTime, finalScores);
               return 0;
             }
           }
@@ -150,6 +160,18 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
   }, [poseResult?.feedback, poseResult?.confidence, voiceEnabled]);
 
+  // Track scores for current pose
+  useEffect(() => {
+    if (poseResult?.confidence !== undefined) {
+      currentPoseScoresRef.current.push(poseResult.confidence);
+    }
+  }, [poseResult?.confidence]);
+
+  // Reset score accumulator when pose changes
+  useEffect(() => {
+    currentPoseScoresRef.current = [];
+  }, [currentPoseIndex]);
+
   // Mobile: Alternating pose/camera view - simple toggle approach
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
@@ -189,7 +211,24 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
   };
 
+  const savePoseScore = () => {
+    const scores = currentPoseScoresRef.current;
+    if (scores.length > 0) {
+      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const newPoseScore: PoseScore = {
+        poseName: currentPose.pose_name,
+        scores: [...scores],
+        averageScore: avgScore,
+      };
+      setPoseScores(prev => [...prev, newPoseScore]);
+      return [...poseScores, newPoseScore];
+    }
+    return poseScores;
+  };
+
   const handleTransitionComplete = () => {
+    // Save scores for the pose that just completed before transitioning
+    savePoseScore();
     setShowTransition(false);
     const nextIndex = currentPoseIndex + 1;
     setCurrentPoseIndex(nextIndex);
@@ -206,18 +245,13 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
   };
 
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const calculateTotalRemaining = (): number => {
-    let remaining = timeRemaining;
-    for (let i = currentPoseIndex + 1; i < totalPoses; i++) {
-      remaining += session.poses[i].duration;
+  const handleExit = () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to exit? Your session progress and scores will be lost.'
+    );
+    if (confirmed) {
+      onExit();
     }
-    return remaining;
   };
 
   if (showTransition) {
@@ -253,7 +287,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             >
               {voiceEnabled ? 'Voice' : 'Muted'}
             </button>
-            <button onClick={onExit} className="control-btn exit-btn">
+            <button onClick={handleExit} className="control-btn exit-btn">
               Exit
             </button>
             {!isConnected && (
