@@ -150,30 +150,31 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
   }, [poseResult?.feedback, poseResult?.confidence, voiceEnabled]);
 
-  // Mobile: Alternating pose/camera view
+  // Mobile: Alternating pose/camera view - simple toggle approach
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
     if (!isMobile || isPaused || showTransition) {
       return;
     }
 
-    const scheduleCameraView = (delay: number) => {
-      mobileViewTimerRef.current = setTimeout(() => {
-        setMobileShowPose(false);
-        schedulePoseView();
-      }, delay * 1000);
-    };
-
-    const schedulePoseView = () => {
-      mobileViewTimerRef.current = setTimeout(() => {
-        setMobileShowPose(true);
-        scheduleCameraView(MOBILE_POSE_DURATION);
-      }, MOBILE_CAMERA_DURATION * 1000);
-    };
-
-    // Start: show pose first, then switch to camera
+    let isFirstCycle = true;
+    let showPose = true;
     setMobileShowPose(true);
-    scheduleCameraView(MOBILE_POSE_INITIAL);
+
+    const scheduleNext = () => {
+      const duration = showPose
+        ? (isFirstCycle ? MOBILE_POSE_INITIAL : MOBILE_POSE_DURATION)
+        : MOBILE_CAMERA_DURATION;
+
+      mobileViewTimerRef.current = setTimeout(() => {
+        isFirstCycle = false;
+        showPose = !showPose;
+        setMobileShowPose(showPose);
+        scheduleNext();
+      }, duration * 1000);
+    };
+
+    scheduleNext();
 
     return () => {
       if (mobileViewTimerRef.current) {
