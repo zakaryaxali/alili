@@ -32,7 +32,7 @@ Real-time yoga pose detection and quality analysis using computer vision. Get pe
 ```bash
 cd backend
 uv sync
-uv run uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:socket_app --reload --port 8000
 ```
 
 The backend will be available at `http://localhost:8000`

@@ -17,8 +17,8 @@ Alili is a real-time yoga pose detection webapp using computer vision. Users sel
 ### Backend
 ```bash
 cd backend
-uv sync                                          # Install dependencies
-uv run uvicorn app.main:app --reload --port 8000 # Run dev server
+uv sync                                               # Install dependencies
+uv run uvicorn app.main:socket_app --reload --port 8000  # Run dev server
 ```
 
 ### Frontend
