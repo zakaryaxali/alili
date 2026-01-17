@@ -30,6 +30,19 @@ npm run build   # Build for production
 npm run lint    # Run ESLint
 ```
 
+### Linting
+```bash
+# Backend (Python with ruff)
+cd backend
+uv run ruff check app/       # Check for issues
+uv run ruff check app/ --fix # Auto-fix issues
+uv run ruff format app/      # Format code
+
+# Frontend (TypeScript with ESLint)
+cd frontend
+npm run lint                 # Check for issues
+```
+
 ## Architecture
 
 ### Real-Time Pose Detection Pipeline
@@ -64,16 +77,37 @@ The app has 4 screens managed by `App.tsx`:
 | `pose_analysis.py` | Per-joint feedback generation |
 | `session_generator.py` | Creates session with warmup→peak→cooldown ordering |
 | `body_parts.py` | Pose metadata, body part mappings, asymmetric pose pairs |
+| `utils/geometry.py` | Shared angle calculation utilities |
+| `services/gemini_analyzer.py` | Optional Gemini AI feedback integration |
 
 ### Key Frontend Components
 
 | Component | Purpose |
 |-----------|---------|
 | `ActiveSession.tsx` | Main session view, manages WebSocket, timer, pose transitions |
+| `SessionComplete.tsx` | Session summary with pose scores |
+| `SessionControls.tsx` | Pause, skip, voice toggle, exit buttons |
+| `PoseInfoCard.tsx` | Current pose name, progress bar, tags |
 | `CameraCapture.tsx` | Camera access, frame capture and streaming |
 | `PoseOverlay.tsx` | SVG skeleton overlay on video |
 | `PoseFeedback.tsx` | Displays real-time feedback and accuracy score |
 | `PoseTransition.tsx` | Between-pose transition screen |
+
+### Custom Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useSessionTimer.ts` | Timer countdown with pause/resume and callbacks |
+| `usePoseScoring.ts` | Accumulates confidence scores per pose |
+| `useMobileViewToggle.ts` | Alternates pose reference and camera on mobile |
+
+### Utilities
+
+| Utility | Purpose |
+|---------|---------|
+| `utils/formatting.ts` | Body part name formatting |
+| `utils/scoreClassification.ts` | Score labels (Excellent, Good, Fair, Needs Work) |
+| `utils/poseImages.ts` | Pose name to image path mapping |
 
 ### WebSocket Events
 

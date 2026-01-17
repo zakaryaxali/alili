@@ -127,12 +127,25 @@ alili/
 │       │   ├── ActiveSession.tsx    # Main session view with camera
 │       │   ├── BodyPartSelector.tsx # Pain/improvement selection
 │       │   ├── SessionConfig.tsx    # Duration configuration
+│       │   ├── SessionComplete.tsx  # Session summary screen
+│       │   ├── SessionControls.tsx  # Pause, skip, voice controls
 │       │   ├── CameraCapture.tsx    # Webcam capture
 │       │   ├── PoseOverlay.tsx      # Skeleton visualization
-│       │   └── PoseFeedback.tsx     # Real-time feedback display
+│       │   ├── PoseFeedback.tsx     # Real-time feedback display
+│       │   ├── PoseInfoCard.tsx     # Current pose information
+│       │   └── PoseTransition.tsx   # Between-pose transition
+│       ├── hooks/
+│       │   ├── useSessionTimer.ts   # Timer management
+│       │   ├── usePoseScoring.ts    # Score tracking
+│       │   └── useMobileViewToggle.ts # Mobile view switching
 │       ├── services/
 │       │   ├── websocket.ts         # Socket.IO client
-│       │   └── sessionService.ts    # REST API client
+│       │   ├── sessionService.ts    # REST API client
+│       │   └── speechService.ts     # Voice feedback
+│       ├── utils/
+│       │   ├── formatting.ts        # Text formatting utilities
+│       │   ├── scoreClassification.ts # Score label utilities
+│       │   └── poseImages.ts        # Pose image mappings
 │       └── types/                   # TypeScript definitions
 ├── backend/
 │   └── app/
@@ -143,7 +156,11 @@ alili/
 │       ├── pose_analysis.py         # Quality feedback generation
 │       ├── session_generator.py     # Personalized session creation
 │       ├── session_routes.py        # Session REST endpoints
-│       └── body_parts.py            # Pose metadata & mappings
+│       ├── body_parts.py            # Pose metadata & mappings
+│       ├── utils/
+│       │   └── geometry.py          # Angle calculation utilities
+│       └── services/
+│           └── gemini_analyzer.py   # Optional Gemini AI feedback
 └── CLAUDE.md                        # Development guidelines
 ```
 
@@ -188,7 +205,78 @@ alili/
 }
 ```
 
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              Frontend (React)                               │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                  │
+│  │   Camera     │───>│   Socket.IO  │───>│   Pose       │                  │
+│  │   Capture    │    │   Client     │    │   Overlay    │                  │
+│  └──────────────┘    └──────┬───────┘    └──────────────┘                  │
+│         │                   │                    ▲                          │
+│         │            base64 frames          landmarks                       │
+│         ▼                   │                    │                          │
+│  ┌──────────────┐           │                    │                          │
+│  │   Pose       │           │                    │                          │
+│  │   Feedback   │<──────────┼────────────────────┘                          │
+│  └──────────────┘           │                                               │
+└─────────────────────────────┼───────────────────────────────────────────────┘
+                              │
+                    WebSocket │ (~15 FPS)
+                              │
+┌─────────────────────────────┼───────────────────────────────────────────────┐
+│                             ▼           Backend (FastAPI)                   │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                  │
+│  │   Socket.IO  │───>│   MediaPipe  │───>│    Pose      │                  │
+│  │   Handler    │    │   Detector   │    │   Recognizer │                  │
+│  └──────────────┘    └──────────────┘    └──────┬───────┘                  │
+│         │                                       │                          │
+│         │                              angle comparison                     │
+│         │                                       │                          │
+│         ▼                                       ▼                          │
+│  ┌──────────────┐                       ┌──────────────┐                   │
+│  │   Session    │                       │    Quality   │                   │
+│  │   Generator  │                       │   Analyzer   │                   │
+│  └──────────────┘                       └──────────────┘                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Environment Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```bash
+# Optional: Enable Gemini AI for enhanced pose feedback
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | No | Google Gemini API key for AI-powered feedback. If not set, uses rule-based feedback. |
+
 ## Development
+
+### Linting
+
+**Backend (Python):**
+```bash
+cd backend
+uv run ruff check app/       # Check for issues
+uv run ruff check app/ --fix # Auto-fix issues
+uv run ruff format app/      # Format code
+```
+
+**Frontend (TypeScript):**
+```bash
+cd frontend
+npm run lint                 # Check for issues
+```
+
+### Code Style
+
+- **Backend**: Ruff with Python 3.12 style (modern type hints, double quotes)
+- **Frontend**: ESLint with React hooks rules, TypeScript strict mode
 
 See [CLAUDE.md](./CLAUDE.md) for architecture details and development guidelines.
 
