@@ -346,10 +346,11 @@
     order: 2; /* Middle */
   }
 
-  /* Feedback above buttons */
+  /* Feedback above buttons - full width */
   .feedback-content {
     order: 5;
     flex-shrink: 0;
+    width: 100%;
   }
 
   /* Mobile connection status - above buttons when disconnected */
