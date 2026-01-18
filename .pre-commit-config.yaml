@@ -19,6 +19,13 @@ repos:
         files: ^frontend/.*\.(ts|tsx)$
         pass_filenames: false
 
+      - id: pytest
+        name: pytest
+        entry: bash -c 'cd backend && uv run pytest tests/ -q'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+
   # General: Trailing whitespace and file endings
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
