@@ -9,6 +9,7 @@ interface SessionControlsProps {
   onSkip: () => void;
   onVoiceToggle: () => void;
   onExit: () => void;
+  className?: string;
 }
 
 const SessionControls: React.FC<SessionControlsProps> = ({
@@ -20,9 +21,10 @@ const SessionControls: React.FC<SessionControlsProps> = ({
   onSkip,
   onVoiceToggle,
   onExit,
+  className,
 }) => {
   return (
-    <div className="session-controls">
+    <div className={`session-controls ${className || ''}`}>
       <button
         onClick={onPause}
         className="control-btn pause-btn"

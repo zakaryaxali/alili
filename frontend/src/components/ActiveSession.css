@@ -250,121 +250,182 @@
 }
 
 @media (max-width: 768px) {
+  /* Mobile: Full screen overlay, ignoring parent padding */
   .active-session {
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height for mobile */
-  }
-
-  .session-content {
+    height: 100dvh;
+    padding: 12px;
+    padding-top: calc(env(safe-area-inset-top, 12px) + 4px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 12px) + 4px);
+    box-sizing: border-box;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    height: 100%;
-    grid-template-columns: unset;
+    z-index: 100;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-secondary) 50%,
+      var(--color-primary) 100%
+    );
   }
 
-  /* Mobile: pose header at top, controls at bottom */
-  .left-section {
-    display: contents; /* Let children participate in parent flex */
+  /* Hide desktop-only content */
+  .session-content {
+    display: none;
   }
 
-  .session-controls {
+  /* Mobile camera container with rounded corners */
+  .mobile-camera-container {
+    position: relative;
+    flex: 1;
     display: flex;
-    gap: 8px;
-    flex-wrap: nowrap;
-    justify-content: space-between;
+    flex-direction: column;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .mobile-video-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+  }
+
+  .mobile-video-wrapper video {
     width: 100%;
-    order: 10; /* Move to bottom */
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Override CameraCapture styles for mobile fullscreen */
+  .mobile-video-wrapper .camera-capture,
+  .mobile-video-wrapper .video-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .mobile-video-wrapper .video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Header overlay - top */
+  .mobile-pose-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 70%, transparent 100%);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* Logo at bottom right */
+  .mobile-logo {
+    position: absolute;
+    bottom: 70px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    opacity: 0.7;
+    z-index: 10;
+  }
+
+  .mobile-pose-info {
+    text-align: left;
+  }
+
+  .mobile-pose-name {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+
+  .mobile-pose-progress {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 2px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* Feedback in header */
+  .mobile-feedback {
     flex-shrink: 0;
   }
 
-  .control-btn {
+  .mobile-feedback .pose-feedback {
+    background: transparent;
+    padding: 0;
+    border: none;
+  }
+
+  .mobile-feedback .mobile-status-bar {
+    padding: 8px 14px;
+    font-size: 0.75em;
+    border-radius: 8px;
+  }
+
+  /* Hide the centered feedback on mobile */
+  .feedback-content {
+    display: none;
+  }
+
+  /* Controls overlay - bottom */
+  .mobile-session-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: transparent;
     padding: 12px 16px;
-    font-size: 1em;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .mobile-session-controls .control-btn {
+    padding: 10px 14px;
+    font-size: 0.9em;
     min-width: unset;
     flex: 1;
     border-radius: 10px;
   }
 
-  .connection-status {
-    display: none;
-  }
-
-  /* Pose info row - stays at top */
-  .mobile-pose-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 14px 16px;
-    width: 100%;
-    box-sizing: border-box;
-    order: 1; /* Top */
-  }
-
-  .mobile-pose-thumbnail {
-    display: none;
-  }
-
-  .mobile-pose-info {
-    text-align: center;
-  }
-
-  .mobile-pose-name {
-    font-size: 1.3em;
-    font-weight: 700;
-    color: #fff;
-  }
-
-  .mobile-pose-progress {
-    font-size: 0.9em;
-    color: rgba(255, 255, 255, 0.8);
-    margin-top: 4px;
-  }
-
-  /* Hide desktop-only elements */
-  .info-card.pose-name-card,
-  .reference-image,
-  .pose-tags {
-    display: none;
-  }
-
-  /* Camera section - portrait, takes most space */
-  .right-section {
-    display: contents; /* Let children participate in parent flex */
-  }
-
-  .video-wrapper {
-    flex: 1;
-    aspect-ratio: unset;
-    min-height: 200px;
-    border-radius: 12px;
-    order: 2; /* Middle */
-    position: relative; /* Required for PoseOverlay positioning */
-    width: 100%;
-  }
-
-  /* Feedback above buttons - full width */
-  .feedback-content {
-    order: 5;
-    flex-shrink: 0;
-    width: 100%;
-  }
-
-  /* Mobile connection status - above buttons when disconnected */
+  /* Mobile connection status - above controls */
   .mobile-connection-status {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
     font-size: 0.85em;
     color: #fca5a5;
-    padding: 8px;
-    order: 8;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border-radius: 20px;
   }
 
   .mobile-connection-status .status-indicator {
@@ -375,53 +436,16 @@
 
 /* Hide mobile-only elements on desktop */
 @media (min-width: 769px) {
+  .mobile-camera-container,
   .mobile-pose-header,
   .mobile-connection-status,
-  .mobile-pose-view {
+  .mobile-pose-view,
+  .mobile-session-controls {
     display: none;
   }
 }
 
-/* Mobile alternating pose/camera view */
+/* Mobile alternating pose/camera view - disabled in overlay mode */
 .mobile-pose-view {
   display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-pose-view {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    order: 2; /* Same as camera */
-  }
-
-  .mobile-pose-view.hidden {
-    display: none;
-  }
-
-  .mobile-pose-view.visible {
-    display: flex;
-  }
-
-  .mobile-pose-fullscreen {
-    flex: 1;
-    min-height: 0;
-    max-width: 100%;
-    object-fit: contain;
-    border-radius: 12px;
-  }
-
-  .mobile-pose-label {
-    display: none; /* Redundant - name shown in header */
-  }
-
-  .video-wrapper.mobile-hidden {
-    display: none;
-  }
 }

@@ -199,6 +199,60 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   return (
     <div className="active-session">
+      {/* Mobile-only camera container with all overlays */}
+      <div className="mobile-camera-container">
+        <div className="mobile-video-wrapper" ref={videoContainerRef}>
+          <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
+          {poseResult && poseResult.landmarks && (
+            <PoseOverlay
+              landmarks={poseResult.landmarks}
+              width={videoDimensions.width}
+              height={videoDimensions.height}
+            />
+          )}
+        </div>
+
+        {/* Header overlay with pose info and feedback */}
+        <div className="mobile-pose-header">
+          <div className="mobile-pose-info">
+            <div className="mobile-pose-name">{currentPose.pose_name}</div>
+            <div className="mobile-pose-progress">
+              Pose {currentPoseIndex + 1} of {totalPoses} • {timeRemaining}s
+            </div>
+          </div>
+          <div className="mobile-feedback">
+            <PoseFeedback
+              feedback={poseResult?.feedback || []}
+              accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
+            />
+          </div>
+        </div>
+
+        {/* Logo at bottom right */}
+        <img src="/favicon.png" alt="Alili" className="mobile-logo" />
+
+        {/* Controls overlay at bottom */}
+        <SessionControls
+          isPaused={isPaused}
+          voiceEnabled={voiceEnabled}
+          canSkip={currentPoseIndex < totalPoses - 1}
+          isConnected={isConnected}
+          onPause={handlePause}
+          onSkip={handleSkip}
+          onVoiceToggle={handleVoiceToggle}
+          onExit={handleExit}
+          className="mobile-session-controls"
+        />
+
+        {/* Mobile-only: Show warning when disconnected */}
+        {!isConnected && (
+          <div className="mobile-connection-status disconnected">
+            <div className="status-indicator disconnected" />
+            <span>Disconnected</span>
+          </div>
+        )}
+      </div>
+
       <div className="session-content">
         <div className="left-section">
           <SessionControls
@@ -211,21 +265,6 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             onVoiceToggle={handleVoiceToggle}
             onExit={handleExit}
           />
-
-          {/* Mobile-only pose header with thumbnail */}
-          <div className="mobile-pose-header">
-            <img
-              src={getPoseImage(currentPose.pose_name)}
-              alt={currentPose.pose_name}
-              className="mobile-pose-thumbnail"
-            />
-            <div className="mobile-pose-info">
-              <div className="mobile-pose-name">{currentPose.pose_name}</div>
-              <div className="mobile-pose-progress">
-                Pose {currentPoseIndex + 1} of {totalPoses} • {timeRemaining}s
-              </div>
-            </div>
-          </div>
 
           <PoseInfoCard
             currentPose={currentPose}
@@ -253,7 +292,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
             <div className="mobile-pose-label">{currentPose.pose_name}</div>
           </div>
 
-          <div className={`video-wrapper ${mobileShowPose ? 'mobile-hidden' : ''}`} ref={videoContainerRef}>
+          <div className="video-wrapper">
             <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
             {poseResult && poseResult.landmarks && (
               <PoseOverlay
@@ -269,14 +308,6 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
               accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
             />
           </div>
-
-          {/* Mobile-only: Show warning when disconnected */}
-          {!isConnected && (
-            <div className="mobile-connection-status disconnected">
-              <div className="status-indicator disconnected" />
-              <span>Disconnected</span>
-            </div>
-          )}
         </div>
       </div>
     </div>
