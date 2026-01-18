@@ -1,0 +1,253 @@
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-modal {
+  background: rgba(30, 30, 45, 0.95);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-header h2 {
+  color: #fff;
+  font-size: 1.3em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.settings-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.settings-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.close-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.close-icon::before,
+.close-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+}
+
+.close-icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.close-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+
+.settings-content {
+  padding: 24px;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section h3 {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 16px;
+}
+
+.settings-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.option-label {
+  color: #fff;
+  font-size: 1em;
+  font-weight: 500;
+}
+
+.option-description {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85em;
+}
+
+.toggle-switch {
+  width: 52px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--transition-normal);
+}
+
+.toggle-switch.active {
+  background: var(--color-success);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--transition-normal);
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(24px);
+}
+
+.settings-action-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-bottom: 12px;
+}
+
+.settings-action-button:last-child {
+  margin-bottom: 0;
+}
+
+.settings-action-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.settings-action-button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.settings-action-button.danger {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.settings-action-button.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--color-error);
+}
+
+.settings-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+}
+
+.settings-stat .stat-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1em;
+}
+
+.settings-stat .stat-value {
+  color: #fff;
+  font-size: 1.4em;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .settings-modal {
+    max-height: 80vh;
+  }
+
+  .settings-header {
+    padding: 16px 20px;
+  }
+
+  .settings-content {
+    padding: 20px;
+  }
+}
