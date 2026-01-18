@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: ./backend
+    container_name: alili-backend
+    restart: unless-stopped
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+    expose:
+      - "8000"
+    networks:
+      - alili-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: alili-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - alili-network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: alili-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - alili-network
+
+networks:
+  alili-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

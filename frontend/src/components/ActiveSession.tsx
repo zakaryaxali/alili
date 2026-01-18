@@ -10,7 +10,7 @@ import { useSessionTimer } from '../hooks/useSessionTimer';
 import { usePoseScoring, type PoseScore } from '../hooks/usePoseScoring';
 import { PoseWebSocketService } from '../services/websocket';
 import { speechService } from '../services/speechService';
-import { getApiUrl } from '../services/api';
+import { getWsUrl } from '../services/api';
 import type { PoseDetectionResult } from '../types/pose';
 import type { YogaSession } from '../types/session';
 import { getPoseImage } from '../utils/poseImages';
@@ -75,7 +75,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   // WebSocket and dimension setup
   useEffect(() => {
-    const wsService = new PoseWebSocketService(getApiUrl());
+    const wsService = new PoseWebSocketService(getWsUrl());
     wsServiceRef.current = wsService;
 
     wsService.connect(

@@ -1,0 +1,20 @@
+{$DOMAIN} {
+    # Backend API - strip /api prefix
+    handle /api/* {
+        uri strip_prefix /api
+        reverse_proxy backend:8000
+    }
+
+    # WebSocket (Socket.IO)
+    handle /socket.io/* {
+        reverse_proxy backend:8000
+    }
+
+    # Frontend (default)
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # Compression
+    encode gzip
+}
