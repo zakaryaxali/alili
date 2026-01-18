@@ -62,8 +62,6 @@ const SessionConfig: React.FC<SessionConfigProps> = ({
         ← Back
       </button>
 
-      <h2>Configure Your Session</h2>
-
       <div className="config-card">
         <div className="duration-selector">
           <label htmlFor="duration-slider">

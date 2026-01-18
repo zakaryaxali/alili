@@ -163,14 +163,15 @@
 
 @media (max-width: 768px) {
   .app-header {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   .app-logo {
-    height: 160px;
+    height: 120px;
+    margin-bottom: 4px;
   }
 
   .app-header p {
-    font-size: 16px;
+    font-size: 15px;
   }
 }

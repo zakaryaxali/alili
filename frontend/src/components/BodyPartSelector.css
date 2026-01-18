@@ -193,8 +193,19 @@
 }
 
 @media (max-width: 600px) {
+  .body-part-selector {
+    padding: 0 16px 20px;
+  }
+
+  .body-part-selector .subtitle {
+    margin-bottom: 16px;
+    font-size: 1em;
+  }
+
   .body-parts-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
   }
 
   .body-part-btn {
@@ -205,5 +216,15 @@
   .popup-btn {
     padding: 8px 12px;
     font-size: 0.85em;
+  }
+
+  .selection-summary {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .continue-btn {
+    padding: 14px 24px;
+    font-size: 1.1em;
   }
 }

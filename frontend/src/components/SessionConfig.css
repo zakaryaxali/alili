@@ -20,13 +20,6 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.session-config h2 {
-  text-align: center;
-  color: #fff;
-  margin-bottom: 30px;
-  font-size: 2em;
-}
-
 .config-card {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 16px;
@@ -191,18 +184,13 @@
 
 @media (max-width: 600px) {
   .session-config {
-    padding: 20px 16px;
+    padding: 8px 16px;
   }
 
   .back-btn {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     padding: 8px 16px;
     font-size: 0.9em;
-  }
-
-  .session-config h2 {
-    margin-bottom: 20px;
-    font-size: 1.6em;
   }
 
   .duration-selector {
