@@ -1,31 +1,55 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import CameraCapture from './CameraCapture';
-import PoseOverlay from './PoseOverlay';
-import PoseFeedback from './PoseFeedback';
-import PoseTransition from './PoseTransition';
-import SessionControls from './SessionControls';
-import PoseInfoCard from './PoseInfoCard';
-import { useMobileViewToggle } from '../hooks/useMobileViewToggle';
-import { useSessionTimer } from '../hooks/useSessionTimer';
-import { usePoseScoring, type PoseScore } from '../hooks/usePoseScoring';
+import { useMobileViewToggle } from './useMobileViewToggle';
+import { useSessionTimer } from './useSessionTimer';
+import { usePoseScoring, type PoseScore } from './usePoseScoring';
 import { PoseWebSocketService } from '../services/websocket';
 import { speechService } from '../services/speechService';
 import { getWsUrl } from '../services/api';
 import type { PoseDetectionResult } from '../types/pose';
-import type { YogaSession } from '../types/session';
-import { getPoseImage } from '../utils/poseImages';
-import './ActiveSession.css';
+import type { YogaSession, SessionPose } from '../types/session';
 
-// Re-export PoseScore for consumers
-export type { PoseScore };
-
-interface ActiveSessionProps {
+export interface UseActiveSessionParams {
   session: YogaSession;
   onComplete: (completedPoses: number, totalTime: number, poseScores: PoseScore[]) => void;
   onExit: () => void;
 }
 
-const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onExit }) => {
+export interface UseActiveSessionReturn {
+  // State
+  currentPoseIndex: number;
+  isPaused: boolean;
+  showTransition: boolean;
+  poseResult: PoseDetectionResult | null;
+  isConnected: boolean;
+  isWebSocketReady: boolean;
+  videoDimensions: { width: number; height: number };
+  voiceEnabled: boolean;
+  timeRemaining: number;
+  mobileShowPose: boolean;
+
+  // Computed
+  currentPose: SessionPose;
+  totalPoses: number;
+  nextPose: SessionPose | null;
+
+  // Refs
+  videoContainerRef: React.RefObject<HTMLDivElement | null>;
+
+  // Callbacks
+  handleFrame: (imageData: string) => void;
+  handleTransitionComplete: () => void;
+  handlePause: () => void;
+  handleSkip: () => void;
+  handleVoiceToggle: () => void;
+  handleExit: () => void;
+  setVideoDimensions: (dimensions: { width: number; height: number }) => void;
+}
+
+export function useActiveSession({
+  session,
+  onComplete,
+  onExit,
+}: UseActiveSessionParams): UseActiveSessionReturn {
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
@@ -42,6 +66,7 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
 
   const currentPose = session.poses[currentPoseIndex];
   const totalPoses = session.poses.length;
+  const nextPose = currentPoseIndex < totalPoses - 1 ? session.poses[currentPoseIndex + 1] : null;
 
   // Use pose scoring hook
   const { addScore, resetCurrentScores, savePoseScore } = usePoseScoring();
@@ -186,132 +211,34 @@ const ActiveSession: React.FC<ActiveSessionProps> = ({ session, onComplete, onEx
     }
   }, [onExit]);
 
-  if (showTransition) {
-    const nextPose = session.poses[currentPoseIndex + 1];
-    return (
-      <PoseTransition
-        nextPoseName={nextPose.pose_name}
-        nextPoseDuration={nextPose.duration}
-        onComplete={handleTransitionComplete}
-      />
-    );
-  }
+  return {
+    // State
+    currentPoseIndex,
+    isPaused,
+    showTransition,
+    poseResult,
+    isConnected,
+    isWebSocketReady,
+    videoDimensions,
+    voiceEnabled,
+    timeRemaining,
+    mobileShowPose,
 
-  return (
-    <div className="active-session">
-      {/* Mobile-only camera container with all overlays */}
-      <div className="mobile-camera-container">
-        <div className="mobile-video-wrapper" ref={videoContainerRef}>
-          <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
-          {poseResult && poseResult.landmarks && (
-            <PoseOverlay
-              landmarks={poseResult.landmarks}
-              width={videoDimensions.width}
-              height={videoDimensions.height}
-            />
-          )}
-        </div>
+    // Computed
+    currentPose,
+    totalPoses,
+    nextPose,
 
-        {/* Header overlay with pose info and feedback */}
-        <div className="mobile-pose-header">
-          <div className="mobile-pose-info">
-            <div className="mobile-pose-name">{currentPose.pose_name}</div>
-            <div className="mobile-pose-progress">
-              Pose {currentPoseIndex + 1} of {totalPoses} • {timeRemaining}s
-            </div>
-          </div>
-          <div className="mobile-feedback">
-            <PoseFeedback
-              feedback={poseResult?.feedback || []}
-              accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
-            />
-          </div>
-        </div>
+    // Refs
+    videoContainerRef,
 
-        {/* Logo at bottom right */}
-        <img src="/favicon.png" alt="Alili" className="mobile-logo" />
-
-        {/* Controls overlay at bottom */}
-        <SessionControls
-          isPaused={isPaused}
-          voiceEnabled={voiceEnabled}
-          canSkip={currentPoseIndex < totalPoses - 1}
-          isConnected={isConnected}
-          onPause={handlePause}
-          onSkip={handleSkip}
-          onVoiceToggle={handleVoiceToggle}
-          onExit={handleExit}
-          className="mobile-session-controls"
-        />
-
-        {/* Mobile-only: Show warning when disconnected */}
-        {!isConnected && (
-          <div className="mobile-connection-status disconnected">
-            <div className="status-indicator disconnected" />
-            <span>Disconnected</span>
-          </div>
-        )}
-      </div>
-
-      <div className="session-content">
-        <div className="left-section">
-          <SessionControls
-            isPaused={isPaused}
-            voiceEnabled={voiceEnabled}
-            canSkip={currentPoseIndex < totalPoses - 1}
-            isConnected={isConnected}
-            onPause={handlePause}
-            onSkip={handleSkip}
-            onVoiceToggle={handleVoiceToggle}
-            onExit={handleExit}
-          />
-
-          <PoseInfoCard
-            currentPose={currentPose}
-            currentPoseIndex={currentPoseIndex}
-            totalPoses={totalPoses}
-            timeRemaining={timeRemaining}
-            session={session}
-          />
-
-          <img
-            src={getPoseImage(currentPose.pose_name)}
-            alt={currentPose.pose_name}
-            className="reference-image"
-          />
-        </div>
-
-        <div className="right-section">
-          {/* Mobile: Full-screen pose reference (alternates with camera) */}
-          <div className={`mobile-pose-view ${mobileShowPose ? 'visible' : 'hidden'}`}>
-            <img
-              src={getPoseImage(currentPose.pose_name)}
-              alt={currentPose.pose_name}
-              className="mobile-pose-fullscreen"
-            />
-            <div className="mobile-pose-label">{currentPose.pose_name}</div>
-          </div>
-
-          <div className="video-wrapper">
-            <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
-            {poseResult && poseResult.landmarks && (
-              <PoseOverlay
-                landmarks={poseResult.landmarks}
-                width={videoDimensions.width}
-                height={videoDimensions.height}
-              />
-            )}
-          </div>
-          <div className="feedback-content">
-            <PoseFeedback
-              feedback={poseResult?.feedback || []}
-              accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ActiveSession;
+    // Callbacks
+    handleFrame,
+    handleTransitionComplete,
+    handlePause,
+    handleSkip,
+    handleVoiceToggle,
+    handleExit,
+    setVideoDimensions,
+  };
+}

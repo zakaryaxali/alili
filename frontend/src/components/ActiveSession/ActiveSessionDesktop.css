@@ -1,0 +1,62 @@
+/* Desktop-specific layout for ActiveSession */
+
+.active-session-desktop {
+  height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.session-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  align-items: start;
+  height: calc(100vh - 40px);
+}
+
+.left-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.right-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.reference-image {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: contain;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1200px) {
+  .session-content {
+    grid-template-columns: 1fr;
+  }
+
+  .right-section {
+    order: -1;
+  }
+}
