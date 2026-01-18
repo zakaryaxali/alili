@@ -3,7 +3,6 @@ import PoseOverlay from '../PoseOverlay';
 import PoseFeedback from '../PoseFeedback';
 import PoseTransition from '../PoseTransition';
 import SessionControls from '../SessionControls';
-import PoseInfoCard from '../PoseInfoCard';
 import { getPoseImage } from '../../utils/poseImages';
 import type { UseActiveSessionReturn } from '../../hooks/useActiveSession';
 import type { YogaSession } from '../../types/session';
@@ -15,7 +14,7 @@ interface ActiveSessionDesktopProps {
   session: YogaSession;
 }
 
-const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionState, session }) => {
+const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionState }) => {
   const {
     currentPoseIndex,
     isPaused,
@@ -48,54 +47,67 @@ const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionStat
     );
   }
 
+  const feedback = poseResult?.feedback || [];
+  const accuracy = poseResult ? Math.round(poseResult.confidence * 5) : null;
+
   return (
     <div className="active-session-desktop">
-      <div className="session-content">
-        <div className="left-section">
-          <SessionControls
-            isPaused={isPaused}
-            voiceEnabled={voiceEnabled}
-            canSkip={currentPoseIndex < totalPoses - 1}
-            isConnected={isConnected}
-            onPause={handlePause}
-            onSkip={handleSkip}
-            onVoiceToggle={handleVoiceToggle}
-            onExit={handleExit}
-          />
+      {/* Left Sidebar - Always visible pose reference */}
+      <aside className="desktop-sidebar">
+        <img
+          src={getPoseImage(currentPose.pose_name)}
+          alt={currentPose.pose_name}
+          className="desktop-pose-reference"
+        />
+      </aside>
 
-          <PoseInfoCard
-            currentPose={currentPose}
-            currentPoseIndex={currentPoseIndex}
-            totalPoses={totalPoses}
-            timeRemaining={timeRemaining}
-            session={session}
-          />
-
-          <img
-            src={getPoseImage(currentPose.pose_name)}
-            alt={currentPose.pose_name}
-            className="reference-image"
-          />
-        </div>
-
-        <div className="right-section">
-          <div className="video-wrapper" ref={videoContainerRef}>
-            <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
-            {poseResult && poseResult.landmarks && (
-              <PoseOverlay
-                landmarks={poseResult.landmarks}
-                width={videoDimensions.width}
-                height={videoDimensions.height}
-              />
-            )}
-          </div>
-          <div className="feedback-content">
-            <PoseFeedback
-              feedback={poseResult?.feedback || []}
-              accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
+      {/* Camera Container with overlays */}
+      <div className="desktop-camera-container">
+        <div className="desktop-video-wrapper" ref={videoContainerRef}>
+          <CameraCapture onFrame={handleFrame} isStreaming={isWebSocketReady} />
+          {poseResult && poseResult.landmarks && (
+            <PoseOverlay
+              landmarks={poseResult.landmarks}
+              width={videoDimensions.width}
+              height={videoDimensions.height}
             />
-          </div>
+          )}
         </div>
+
+        {/* Header overlay - pose info */}
+        <div className="desktop-header-overlay">
+          <div className="desktop-pose-info">
+            <span className="desktop-pose-name">{currentPose.pose_name}</span>
+            <span className="desktop-pose-progress">
+              {currentPoseIndex + 1}/{totalPoses} • {timeRemaining}s
+            </span>
+          </div>
+          <PoseFeedback
+            feedback={feedback}
+            accuracy={accuracy}
+          />
+        </div>
+
+        {/* Controls overlay */}
+        <SessionControls
+          isPaused={isPaused}
+          voiceEnabled={voiceEnabled}
+          canSkip={currentPoseIndex < totalPoses - 1}
+          isConnected={isConnected}
+          onPause={handlePause}
+          onSkip={handleSkip}
+          onVoiceToggle={handleVoiceToggle}
+          onExit={handleExit}
+          className="desktop-controls-overlay"
+        />
+
+        {/* Connection warning */}
+        {!isConnected && (
+          <div className="desktop-connection-status">
+            <div className="status-indicator disconnected" />
+            <span>Disconnected</span>
+          </div>
+        )}
       </div>
     </div>
   );
