@@ -5,6 +5,7 @@ import ActiveSession, { type PoseScore } from './components/ActiveSession';
 import SessionComplete from './components/SessionComplete';
 import { SessionService } from './services/sessionService';
 import type { YogaSession, SessionScreen } from './types/session';
+import aliliLogo from './assets/alili-logo.png';
 import './App.css';
 
 function App() {
@@ -64,7 +65,7 @@ function App() {
       {currentScreen === 'selector' && (
         <>
           <header className="app-header">
-            <h1>Alili</h1>
+            <img src={aliliLogo} alt="Alili" className="app-logo" />
             <p>Personalized yoga sessions with real-time AI feedback</p>
           </header>
           <BodyPartSelector onComplete={handleBodyPartsSelected} />
@@ -74,7 +75,7 @@ function App() {
       {currentScreen === 'config' && (
         <>
           <header className="app-header">
-            <h1>Alili</h1>
+            <img src={aliliLogo} alt="Alili" className="app-logo" />
           </header>
           <SessionConfig
             painAreas={painAreas}

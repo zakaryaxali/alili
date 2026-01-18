@@ -66,10 +66,10 @@
   margin-bottom: 30px;
 }
 
-.app-header h1 {
-  font-size: 48px;
-  margin: 0 0 10px 0;
-  font-weight: 700;
+.app-logo {
+  height: 240px;
+  width: auto;
+  margin-bottom: 10px;
 }
 
 .app-header p {
@@ -164,8 +164,8 @@
     margin-bottom: 16px;
   }
 
-  .app-header h1 {
-    font-size: 32px;
+  .app-logo {
+    height: 160px;
   }
 
   .app-header p {
