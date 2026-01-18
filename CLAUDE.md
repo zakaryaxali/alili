@@ -43,6 +43,13 @@ cd frontend
 npm run lint                 # Check for issues
 ```
 
+### Testing
+```bash
+cd backend
+uv run pytest tests/ -v      # Run all tests with verbose output
+uv run pytest tests/ -q      # Run all tests quietly
+```
+
 ## Architecture
 
 ### Real-Time Pose Detection Pipeline

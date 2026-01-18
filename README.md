@@ -274,6 +274,7 @@ uv run pre-commit run --all-files
 The hooks run automatically on `git commit` and include:
 - **ruff**: Python linting and formatting (backend)
 - **eslint**: TypeScript/React linting (frontend)
+- **pytest**: Run backend tests (backend)
 - **trailing-whitespace**: Remove trailing whitespace
 - **end-of-file-fixer**: Ensure files end with newline
 
@@ -291,6 +292,16 @@ uv run ruff format app/      # Format code
 ```bash
 cd frontend
 npm run lint                 # Check for issues
+```
+
+### Testing
+
+**Backend:**
+```bash
+cd backend
+uv run pytest tests/ -v      # Run all tests with verbose output
+uv run pytest tests/ -q      # Run all tests quietly
+uv run pytest tests/test_geometry.py  # Run specific test file
 ```
 
 ### Code Style
