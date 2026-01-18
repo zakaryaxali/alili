@@ -91,7 +91,9 @@ The app has 4 screens managed by `App.tsx`:
 
 | Component | Purpose |
 |-----------|---------|
-| `ActiveSession.tsx` | Main session view, manages WebSocket, timer, pose transitions |
+| `ActiveSession/ActiveSession.tsx` | Main session wrapper, selects mobile/desktop layout |
+| `ActiveSession/ActiveSessionMobile.tsx` | Mobile immersive layout with camera overlays |
+| `ActiveSession/ActiveSessionDesktop.tsx` | Desktop layout with sidebar pose reference |
 | `SessionComplete.tsx` | Session summary with pose scores |
 | `SessionControls.tsx` | Pause, skip, voice toggle, exit buttons |
 | `PoseInfoCard.tsx` | Current pose name, progress bar, tags |
@@ -104,6 +106,7 @@ The app has 4 screens managed by `App.tsx`:
 
 | Hook | Purpose |
 |------|---------|
+| `useActiveSession.ts` | Central hook managing all session state, WebSocket, and callbacks |
 | `useSessionTimer.ts` | Timer countdown with pause/resume and callbacks |
 | `usePoseScoring.ts` | Accumulates confidence scores per pose |
 | `useMobileViewToggle.ts` | Alternates pose reference and camera on mobile |

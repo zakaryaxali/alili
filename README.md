@@ -124,7 +124,10 @@ alili/
 ├── frontend/
 │   └── src/
 │       ├── components/
-│       │   ├── ActiveSession.tsx    # Main session view with camera
+│       │   ├── ActiveSession/       # Session view components
+│       │   │   ├── ActiveSession.tsx        # Main wrapper (selects mobile/desktop)
+│       │   │   ├── ActiveSessionMobile.tsx  # Mobile immersive layout
+│       │   │   └── ActiveSessionDesktop.tsx # Desktop layout with sidebar
 │       │   ├── BodyPartSelector.tsx # Pain/improvement selection
 │       │   ├── SessionConfig.tsx    # Duration configuration
 │       │   ├── SessionComplete.tsx  # Session summary screen
@@ -135,6 +138,7 @@ alili/
 │       │   ├── PoseInfoCard.tsx     # Current pose information
 │       │   └── PoseTransition.tsx   # Between-pose transition
 │       ├── hooks/
+│       │   ├── useActiveSession.ts  # Central session state management
 │       │   ├── useSessionTimer.ts   # Timer management
 │       │   ├── usePoseScoring.ts    # Score tracking
 │       │   └── useMobileViewToggle.ts # Mobile view switching
