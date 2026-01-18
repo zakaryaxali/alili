@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 
 // Mobile alternating view timings (in seconds)
-const MOBILE_POSE_INITIAL = 5;  // Show pose first for 5s
+const MOBILE_POSE_INITIAL = 2;  // Show pose first for 2s
 const MOBILE_CAMERA_DURATION = 10;  // Then camera for 10s
-const MOBILE_POSE_DURATION = 3;  // Then pose for 3s, repeat
+const MOBILE_POSE_DURATION = 2;  // Then pose for 2s, repeat
 
 interface UseMobileViewToggleParams {
   isPaused: boolean;

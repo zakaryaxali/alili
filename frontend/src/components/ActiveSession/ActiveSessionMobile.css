@@ -170,3 +170,57 @@
   width: 10px;
   height: 10px;
 }
+
+/* Pose reference overlay - expands from logo position */
+.mobile-pose-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+  transform-origin: bottom right;
+  pointer-events: none;
+}
+
+.mobile-pose-overlay.hidden {
+  animation: pose-collapse 0.3s ease-in forwards;
+}
+
+.mobile-pose-overlay.visible {
+  animation: pose-expand 0.3s ease-out forwards;
+}
+
+@keyframes pose-expand {
+  from {
+    transform: scale(0);
+    opacity: 0;
+    border-radius: 50%;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+    border-radius: 20px;
+  }
+}
+
+@keyframes pose-collapse {
+  from {
+    transform: scale(1);
+    opacity: 1;
+    border-radius: 20px;
+  }
+  to {
+    transform: scale(0);
+    opacity: 0;
+    border-radius: 50%;
+  }
+}
+
+.mobile-pose-image {
+  max-width: 90%;
+  max-height: 80%;
+  object-fit: contain;
+  border-radius: 12px;
+}

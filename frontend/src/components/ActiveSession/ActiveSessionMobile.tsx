@@ -4,6 +4,7 @@ import PoseFeedback from '../PoseFeedback';
 import PoseTransition from '../PoseTransition';
 import SessionControls from '../SessionControls';
 import type { UseActiveSessionReturn } from '../../hooks/useActiveSession';
+import { getPoseImage } from '../../utils/poseImages';
 import './ActiveSession.shared.css';
 import './ActiveSessionMobile.css';
 
@@ -22,6 +23,7 @@ const ActiveSessionMobile: React.FC<ActiveSessionMobileProps> = ({ sessionState 
     videoDimensions,
     voiceEnabled,
     timeRemaining,
+    mobileShowPose,
     currentPose,
     totalPoses,
     nextPose,
@@ -76,6 +78,15 @@ const ActiveSessionMobile: React.FC<ActiveSessionMobileProps> = ({ sessionState 
 
         {/* Logo at bottom right */}
         <img src="/favicon.png" alt="Alili" className="mobile-logo" />
+
+        {/* Pose reference overlay - expands from logo */}
+        <div className={`mobile-pose-overlay ${mobileShowPose ? 'visible' : 'hidden'}`}>
+          <img
+            src={getPoseImage(currentPose.pose_name)}
+            alt={currentPose.pose_name}
+            className="mobile-pose-image"
+          />
+        </div>
 
         {/* Controls overlay at bottom */}
         <SessionControls
