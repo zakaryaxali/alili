@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { XCircle } from 'lucide-react';
 import { useSpeech } from '../../hooks/useSpeech';
+import { getWsUrl } from '../../services/api';
 import './CameraSetup.css';
 
 interface CameraSetupProps {
@@ -25,8 +26,6 @@ const REQUIRED_LANDMARKS = [
 ];
 const VISIBILITY_THRESHOLD = 0.6;
 const HOLD_DURATION = 3000; // 3 seconds
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -127,7 +126,7 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
   const connectSocket = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    const socket = io(API_URL, {
+    const socket = io(getWsUrl(), {
       transports: ['websocket'],
       reconnection: true,
     });
