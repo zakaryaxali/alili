@@ -31,11 +31,8 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
         audio: false,
       });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setHasPermission(true);
-      }
+      streamRef.current = stream;
+      setHasPermission(true);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to access camera';
@@ -53,6 +50,14 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
       stopCamera();
     };
   }, [startCamera, stopCamera]);
+
+  // Callback ref to assign stream when video element mounts
+  const setVideoRef = useCallback((video: HTMLVideoElement | null) => {
+    videoRef.current = video;
+    if (video && streamRef.current) {
+      video.srcObject = streamRef.current;
+    }
+  }, []);
 
   const handleContinue = () => {
     stopCamera();
@@ -90,7 +95,7 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
           {hasPermission && (
             <>
               <video
-                ref={videoRef}
+                ref={setVideoRef}
                 autoPlay
                 playsInline
                 muted
