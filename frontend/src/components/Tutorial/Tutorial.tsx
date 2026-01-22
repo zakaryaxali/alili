@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getPoseImage } from '../../utils/poseImages';
+import { useSpeech } from '../../hooks/useSpeech';
 import PoseOverlay from '../PoseOverlay';
 import './Tutorial.css';
 
@@ -28,24 +29,28 @@ const TUTORIAL_STEPS = [
     description:
       'This shows the yoga pose you\'re aiming for. Match your body to this reference.',
     highlight: 'pose-reference',
+    audio: 'Step 1. See your target pose. The image shows the yoga pose you are aiming for. Try to match your body to this reference.',
   },
   {
     title: 'Watch Your Skeleton',
     description:
       'The colored lines track your body position in real-time. Green means good alignment!',
     highlight: 'skeleton',
+    audio: 'Step 2. Watch your skeleton. The colored lines track your body position in real-time. Green means good alignment.',
   },
   {
     title: 'Check Your Score',
     description:
       'Stars show how well you match the pose. More stars = better alignment!',
     highlight: 'score',
+    audio: 'Step 3. Check your score. Stars show how well you match the pose. More stars means better alignment.',
   },
   {
     title: 'Follow the Tips',
     description:
       'Real-time suggestions help you improve your form. Follow them to get more stars!',
     highlight: 'feedback',
+    audio: 'Step 4. Follow the tips. Real-time suggestions help you improve your form. Follow them to get more stars.',
   },
 ];
 
@@ -58,12 +63,14 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const [confidence, setConfidence] = useState(0);
   const [feedback, setFeedback] = useState<string[]>([]);
   const [videoDimensions, setVideoDimensions] = useState({ width: 640, height: 480 });
+  const { speak, stop: stopSpeech } = useSpeech();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const hasSpokenStepRef = useRef<number>(-1);
 
   const stopFrameCapture = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -163,9 +170,10 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
 
   const startPractice = useCallback(async () => {
     setIsPracticing(true);
+    speak('Practice time! Try holding the Mountain Pose for a few seconds. Match your body to the reference image.');
     connectSocket();
     await startCamera();
-  }, [connectSocket, startCamera]);
+  }, [connectSocket, startCamera, speak]);
 
   useEffect(() => {
     if (isPracticing && streamRef.current) {
@@ -180,8 +188,17 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     return () => {
       stopCamera();
       disconnectSocket();
+      stopSpeech();
     };
-  }, [stopCamera, disconnectSocket]);
+  }, [stopCamera, disconnectSocket, stopSpeech]);
+
+  // Speak current step audio
+  useEffect(() => {
+    if (!isPracticing && hasSpokenStepRef.current !== currentStep) {
+      hasSpokenStepRef.current = currentStep;
+      speak(TUTORIAL_STEPS[currentStep].audio);
+    }
+  }, [currentStep, isPracticing, speak]);
 
   const handleNextStep = () => {
     if (currentStep < TUTORIAL_STEPS.length - 1) {

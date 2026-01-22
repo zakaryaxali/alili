@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { XCircle } from 'lucide-react';
+import { useSpeech } from '../../hooks/useSpeech';
 import './CameraSetup.css';
 
 interface CameraSetupProps {
@@ -11,6 +12,8 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
   const streamRef = useRef<MediaStream | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string>('');
+  const { speak, stop } = useSpeech();
+  const hasSpokenRef = useRef(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -58,6 +61,19 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
       video.srcObject = streamRef.current;
     }
   }, []);
+
+  // Speak instructions when camera is connected
+  useEffect(() => {
+    if (hasPermission && !hasSpokenRef.current) {
+      hasSpokenRef.current = true;
+      speak(
+        'Camera connected. Please position yourself so your full body is visible in the frame. Stand about 6 to 8 feet away from the camera. When you are ready, tap Continue.'
+      );
+    }
+    return () => {
+      stop();
+    };
+  }, [hasPermission, speak, stop]);
 
   const handleContinue = () => {
     stopCamera();

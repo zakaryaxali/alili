@@ -31,14 +31,14 @@
 
 .welcome-title {
   color: #fff;
-  font-size: 2.5em;
+  font-size: 3.5em;
   font-weight: 700;
-  margin: 0 0 8px;
+  margin: 0 0 12px;
 }
 
 .welcome-subtitle {
   color: rgba(255, 255, 255, 0.9);
-  font-size: 1.2em;
+  font-size: 1.6em;
   margin: 0 0 40px;
 }
 
@@ -73,16 +73,16 @@
 
 .feature-card h3 {
   color: #fff;
-  font-size: 1.1em;
+  font-size: 1.3em;
   font-weight: 600;
-  margin: 0 0 8px;
+  margin: 0 0 10px;
 }
 
 .feature-card p {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9em;
+  font-size: 1.1em;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .welcome-demo {
@@ -253,12 +253,12 @@
 }
 
 .welcome-button {
-  padding: 18px 64px;
+  padding: 22px 72px;
   background: rgba(255, 255, 255, 0.95);
   color: var(--color-primary);
   border: none;
   border-radius: var(--radius-md);
-  font-size: 1.3em;
+  font-size: 1.5em;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-normal);
