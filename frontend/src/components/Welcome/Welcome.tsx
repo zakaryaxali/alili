@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Target, ScanFace, MessageCircle } from 'lucide-react';
+import { useSpeech } from '../../hooks/useSpeech';
 import aliliLogo from '../../assets/alili-logo.png';
 import './Welcome.css';
 
@@ -7,8 +9,24 @@ interface WelcomeProps {
 }
 
 const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
-  // Note: Audio cannot play on Welcome screen due to browser autoplay policy
-  // (no prior user interaction). Audio guidance starts on CameraSetup screen.
+  const { speak } = useSpeech();
+  const [isStarting, setIsStarting] = useState(false);
+
+  const handleGetStarted = () => {
+    if (isStarting) return;
+    setIsStarting(true);
+
+    // Play welcome audio on click (user gesture unlocks audio)
+    speak(
+      'Welcome to Alili. Your AI yoga assistant. Tap Get Started to begin.',
+      {
+        onEnd: onGetStarted,
+      }
+    );
+
+    // Fallback: navigate after 4 seconds if onEnd doesn't fire
+    setTimeout(onGetStarted, 4000);
+  };
 
   return (
     <div className="welcome">
@@ -61,8 +79,12 @@ const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
           </div>
         </div>
 
-        <button className="welcome-button" onClick={onGetStarted}>
-          Get Started
+        <button
+          className="welcome-button"
+          onClick={handleGetStarted}
+          disabled={isStarting}
+        >
+          {isStarting ? 'Starting...' : 'Get Started'}
         </button>
       </div>
     </div>
