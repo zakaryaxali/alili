@@ -382,11 +382,11 @@
 
 @media (max-width: 768px) {
   .tutorial-step-title {
-    font-size: 1.6em;
+    font-size: 2.5em;
   }
 
   .tutorial-step-description {
-    font-size: 1em;
+    font-size: 1.4em;
     margin-bottom: 32px;
   }
 
@@ -400,7 +400,16 @@
   }
 
   .demo-star {
-    font-size: 2em;
+    font-size: 2.5em;
+  }
+
+  .demo-skeleton-label,
+  .demo-score-label {
+    font-size: 1.2em;
+  }
+
+  .demo-feedback-bubble {
+    font-size: 1.2em;
   }
 
   .tutorial-navigation {
@@ -409,7 +418,8 @@
 
   .tutorial-nav-button {
     width: 100%;
-    padding: 14px 32px;
+    padding: 18px 32px;
+    font-size: 1.4em;
   }
 
   .tutorial-practice-layout {

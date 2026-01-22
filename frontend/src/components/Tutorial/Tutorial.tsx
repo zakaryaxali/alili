@@ -55,7 +55,6 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const streamRef = useRef<MediaStream | null>(null);
   const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const intervalRef = useRef<number | null>(null);
-  const hasSpokenStepRef = useRef<number>(-1);
 
   const stopFrameCapture = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -180,12 +179,36 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     };
   }, [stopCamera, disconnectSocket, stopSpeech]);
 
-  // Speak current step audio
+  // Speak current step audio and auto-advance when done
   useEffect(() => {
-    if (!isPracticing && hasSpokenStepRef.current !== currentStep) {
-      hasSpokenStepRef.current = currentStep;
-      speak(TUTORIAL_STEPS[currentStep].audio);
-    }
+    if (isPracticing) return;
+
+    let hasAdvanced = false;
+    const advanceToNextStep = () => {
+      if (hasAdvanced) return;
+      hasAdvanced = true;
+      if (currentStep < TUTORIAL_STEPS.length - 1) {
+        setTimeout(() => {
+          setCurrentStep((prev) => prev + 1);
+        }, 1000);
+      }
+    };
+
+    // Speak the current step audio
+    speak(TUTORIAL_STEPS[currentStep].audio, {
+      onEnd: advanceToNextStep,
+    });
+
+    // Fallback timer in case speech doesn't work or onEnd never fires
+    // Use generous timing: ~250ms per word (speech rate is 0.9) + 4 seconds buffer
+    const wordCount = TUTORIAL_STEPS[currentStep].audio.split(' ').length;
+    const estimatedDuration = wordCount * 250 + 4000;
+    const fallbackTimer = setTimeout(advanceToNextStep, estimatedDuration);
+
+    return () => {
+      clearTimeout(fallbackTimer);
+      hasAdvanced = true; // Prevent advance if effect is cleaned up
+    };
   }, [currentStep, isPracticing, speak]);
 
   const handleNextStep = () => {

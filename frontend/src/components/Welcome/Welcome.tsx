@@ -1,6 +1,4 @@
-import { useEffect, useRef } from 'react';
 import { Target, ScanFace, MessageCircle } from 'lucide-react';
-import { useSpeech } from '../../hooks/useSpeech';
 import aliliLogo from '../../assets/alili-logo.png';
 import './Welcome.css';
 
@@ -9,20 +7,8 @@ interface WelcomeProps {
 }
 
 const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
-  const { speak, stop } = useSpeech();
-  const hasSpokenRef = useRef(false);
-
-  useEffect(() => {
-    if (!hasSpokenRef.current) {
-      hasSpokenRef.current = true;
-      speak(
-        'Welcome to Alili. Your AI-powered yoga assistant. I will guide you through poses and give you real-time feedback to perfect your practice. Tap Get Started to begin.'
-      );
-    }
-    return () => {
-      stop();
-    };
-  }, [speak, stop]);
+  // Note: Audio cannot play on Welcome screen due to browser autoplay policy
+  // (no prior user interaction). Audio guidance starts on CameraSetup screen.
 
   return (
     <div className="welcome">
