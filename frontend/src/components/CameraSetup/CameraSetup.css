@@ -173,6 +173,58 @@
   right: 25px;
 }
 
+/* Valid position state */
+.positioning-guide.valid .guide-silhouette {
+  opacity: 0.8;
+}
+
+.positioning-guide.valid .guide-head,
+.positioning-guide.valid .guide-body,
+.positioning-guide.valid .guide-arm,
+.positioning-guide.valid .guide-leg {
+  border-color: var(--color-success);
+  border-style: solid;
+}
+
+/* Hold progress ring */
+.hold-progress-ring {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hold-progress-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.hold-progress-ring .progress-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 4;
+}
+
+.hold-progress-ring .progress-fill {
+  fill: none;
+  stroke: var(--color-success);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+.hold-countdown {
+  position: absolute;
+  font-size: 2.5em;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
 .camera-status {
   display: flex;
   justify-content: center;
