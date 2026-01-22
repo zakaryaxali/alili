@@ -1,26 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { getPoseImage } from '../../utils/poseImages';
 import { useSpeech } from '../../hooks/useSpeech';
+import { PoseWebSocketService } from '../../services/websocket';
+import type { PoseDetectionResult } from '../../types/pose';
 import PoseOverlay from '../PoseOverlay';
 import './Tutorial.css';
 
 interface TutorialProps {
   onComplete: () => void;
-}
-
-interface Landmark {
-  x: number;
-  y: number;
-  z: number;
-  visibility: number;
-}
-
-interface PoseResult {
-  landmarks: Landmark[] | null;
-  poseName: string | null;
-  confidence: number;
-  feedback: string[];
 }
 
 const TUTORIAL_STEPS = [
@@ -54,12 +41,10 @@ const TUTORIAL_STEPS = [
   },
 ];
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPracticing, setIsPracticing] = useState(false);
-  const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
+  const [landmarks, setLandmarks] = useState<PoseDetectionResult['landmarks']>(null);
   const [confidence, setConfidence] = useState(0);
   const [feedback, setFeedback] = useState<string[]>([]);
   const [videoDimensions, setVideoDimensions] = useState({ width: 640, height: 480 });
@@ -68,7 +53,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const intervalRef = useRef<number | null>(null);
   const hasSpokenStepRef = useRef<number>(-1);
 
@@ -88,9 +73,9 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   }, [stopFrameCapture]);
 
   const disconnectSocket = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
+    if (wsServiceRef.current) {
+      wsServiceRef.current.disconnect();
+      wsServiceRef.current = null;
     }
   }, []);
 
@@ -125,7 +110,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   }, [handleVideoLoadedMetadata]);
 
   const captureFrame = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current || !socketRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !wsServiceRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -138,12 +123,8 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
-    // Strip the data:image/jpeg;base64, prefix
-    const base64Data = imageData.split(',')[1];
-    socketRef.current.emit('video_frame', {
-      image: base64Data,
-      target_pose: 'Mountain Pose',
-    });
+    // Service handles base64 prefix stripping
+    wsServiceRef.current.sendFrame(imageData, 'Mountain Pose');
   }, []);
 
   const startFrameCapture = useCallback(() => {
@@ -152,22 +133,27 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   }, [stopFrameCapture, captureFrame]);
 
   const connectSocket = useCallback(() => {
-    const socket = io(API_URL, {
-      transports: ['websocket'],
-      reconnection: true,
-    });
+    if (wsServiceRef.current?.isConnected()) return;
 
-    socket.on('connect', () => {
-      console.log('Tutorial: Socket connected');
-    });
+    const service = new PoseWebSocketService();
+    wsServiceRef.current = service;
 
-    socket.on('pose_result', (result: PoseResult) => {
-      setLandmarks(result.landmarks);
-      setConfidence(result.confidence);
-      setFeedback(result.feedback || []);
-    });
-
-    socketRef.current = socket;
+    service.connect(
+      // onResult
+      (result: PoseDetectionResult) => {
+        setLandmarks(result.landmarks);
+        setConfidence(result.confidence);
+        setFeedback(result.feedback || []);
+      },
+      // onError
+      (errorMsg: string) => {
+        console.error('Tutorial WebSocket error:', errorMsg);
+      },
+      // onConnectionChange
+      (connected: boolean) => {
+        console.log('Tutorial: Socket', connected ? 'connected' : 'disconnected');
+      }
+    );
   }, []);
 
   const startPractice = useCallback(async () => {

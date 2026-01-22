@@ -1,19 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { XCircle } from 'lucide-react';
 import { useSpeech } from '../../hooks/useSpeech';
-import { getWsUrl } from '../../services/api';
+import { PoseWebSocketService } from '../../services/websocket';
+import type { PoseDetectionResult } from '../../types/pose';
 import './CameraSetup.css';
 
 interface CameraSetupProps {
   onContinue: () => void;
-}
-
-interface Landmark {
-  x: number;
-  y: number;
-  z: number;
-  visibility: number;
 }
 
 // Landmark indices for full body visibility check
@@ -31,7 +24,7 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const wsServiceRef = useRef<PoseWebSocketService | null>(null);
   const intervalRef = useRef<number | null>(null);
   const holdTimerRef = useRef<number | null>(null);
 
@@ -46,7 +39,7 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
   const hasAutoAdvancedRef = useRef(false);
 
   // Validate if all required landmarks are visible
-  const validatePosition = useCallback((landmarks: Landmark[] | null): boolean => {
+  const validatePosition = useCallback((landmarks: PoseDetectionResult['landmarks']): boolean => {
     if (!landmarks || landmarks.length < 33) return false;
 
     return REQUIRED_LANDMARKS.every(
@@ -70,9 +63,9 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
   }, [stopFrameCapture]);
 
   const disconnectSocket = useCallback(() => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
+    if (wsServiceRef.current) {
+      wsServiceRef.current.disconnect();
+      wsServiceRef.current = null;
     }
   }, []);
 
@@ -101,7 +94,7 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
 
   // Capture and send frames for pose detection
   const captureFrame = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current || !socketRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !wsServiceRef.current) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -114,9 +107,8 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL('image/jpeg', 0.7);
-    // Strip the data:image/jpeg;base64, prefix
-    const base64Data = imageData.split(',')[1];
-    socketRef.current.emit('video_frame', { image: base64Data });
+    // Service handles base64 prefix stripping
+    wsServiceRef.current.sendFrame(imageData);
   }, []);
 
   const startFrameCapture = useCallback(() => {
@@ -126,23 +118,26 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
 
   // Connect to socket and listen for pose results
   const connectSocket = useCallback(() => {
-    if (socketRef.current?.connected) return;
+    if (wsServiceRef.current?.isConnected()) return;
 
-    const socket = io(getWsUrl(), {
-      transports: ['websocket'],
-      reconnection: true,
-    });
+    const service = new PoseWebSocketService();
+    wsServiceRef.current = service;
 
-    socket.on('connect', () => {
-      console.log('CameraSetup: Socket connected');
-    });
-
-    socket.on('pose_result', (result: { landmarks: Landmark[] | null }) => {
-      const isValid = validatePosition(result.landmarks);
-      setIsPositionValid(isValid);
-    });
-
-    socketRef.current = socket;
+    service.connect(
+      // onResult
+      (result: PoseDetectionResult) => {
+        const isValid = validatePosition(result.landmarks);
+        setIsPositionValid(isValid);
+      },
+      // onError
+      (errorMsg: string) => {
+        console.error('CameraSetup WebSocket error:', errorMsg);
+      },
+      // onConnectionChange
+      (connected: boolean) => {
+        console.log('CameraSetup: Socket', connected ? 'connected' : 'disconnected');
+      }
+    );
   }, [validatePosition]);
 
   // Initialize camera on mount - startCamera sets state which is intentional for this external API
@@ -231,6 +226,7 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
 
   const handleContinue = () => {
     stopCamera();
+    disconnectSocket();
     onContinue();
   };
 
