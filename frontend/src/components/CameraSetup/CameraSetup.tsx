@@ -114,7 +114,9 @@ const CameraSetup: React.FC<CameraSetupProps> = ({ onContinue }) => {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL('image/jpeg', 0.7);
-    socketRef.current.emit('video_frame', { image: imageData });
+    // Strip the data:image/jpeg;base64, prefix
+    const base64Data = imageData.split(',')[1];
+    socketRef.current.emit('video_frame', { image: base64Data });
   }, []);
 
   const startFrameCapture = useCallback(() => {

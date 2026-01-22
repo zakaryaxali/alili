@@ -138,8 +138,10 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
+    // Strip the data:image/jpeg;base64, prefix
+    const base64Data = imageData.split(',')[1];
     socketRef.current.emit('video_frame', {
-      image: imageData,
+      image: base64Data,
       target_pose: 'Mountain Pose',
     });
   }, []);
