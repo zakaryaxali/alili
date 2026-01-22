@@ -191,6 +191,21 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
         setTimeout(() => {
           setCurrentStep((prev) => prev + 1);
         }, 1000);
+      } else {
+        // Last step - announce practice starting, then auto-start after 5 seconds
+        setTimeout(() => {
+          speak('Practice starting in 5 seconds. Get ready!', {
+            onEnd: () => {
+              setTimeout(() => {
+                startPractice();
+              }, 5000);
+            },
+          });
+          // Fallback in case onEnd doesn't fire
+          setTimeout(() => {
+            startPractice();
+          }, 7000);
+        }, 1000);
       }
     };
 
@@ -209,7 +224,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
       clearTimeout(fallbackTimer);
       hasAdvanced = true; // Prevent advance if effect is cleaned up
     };
-  }, [currentStep, isPracticing, speak]);
+  }, [currentStep, isPracticing, speak, startPractice]);
 
   const handleNextStep = () => {
     if (currentStep < TUTORIAL_STEPS.length - 1) {
