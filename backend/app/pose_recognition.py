@@ -1,5 +1,74 @@
 from .utils.geometry import calculate_angle
 
+# Pose orientation requirements - which view each pose needs
+POSE_ORIENTATIONS: dict[str, list[str]] = {
+    # Side view poses
+    "Downward Dog": ["side_left", "side_right"],
+    "Plank": ["side_left", "side_right"],
+    "Reverse Table Top": ["side_left", "side_right"],
+    # Front view poses
+    "Mountain Pose": ["front"],
+    "Warrior II Left": ["front"],
+    "Warrior II Right": ["front"],
+    "Tree Pose Left": ["front"],
+    "Tree Pose Right": ["front"],
+    "Easy Seat": ["front"],
+    "Seated Hands Behind Back Stretch": ["front"],
+    "Gomukasana Legs Fold": ["front"],
+    # Supine poses (camera pointing down or front view while lying)
+    "Supine Bound Angle": ["front", "supine"],
+    "Hug the Knees": ["front", "supine"],
+    "Supine Bent Knees": ["front", "supine"],
+    # Any orientation works
+    "Janu Sirsasana Twist Left": ["front", "side_left", "side_right"],
+    "Janu Sirsasana Twist Right": ["front", "side_left", "side_right"],
+    "Janu Sirsasana Revolved Left": ["front", "side_left", "side_right"],
+    "Janu Sirsasana Revolved Right": ["front", "side_left", "side_right"],
+}
+
+
+def detect_orientation(landmarks: list[dict]) -> str:
+    """
+    Detect user's orientation relative to camera.
+
+    Uses shoulder width (x-distance) and depth difference (z-distance)
+    to determine if user is facing the camera or sideways.
+
+    Args:
+        landmarks: List of 33 MediaPipe landmarks with x, y, z, visibility
+
+    Returns:
+        'front', 'side_left', 'side_right', or 'supine'
+    """
+    if not landmarks or len(landmarks) < 33:
+        return "front"
+
+    left_shoulder = landmarks[11]
+    right_shoulder = landmarks[12]
+    left_hip = landmarks[23]
+    right_hip = landmarks[24]
+
+    # Calculate shoulder width (x-distance between shoulders)
+    shoulder_width = abs(left_shoulder["x"] - right_shoulder["x"])
+
+    # Calculate shoulder depth difference (z-distance)
+    # Positive means left shoulder is closer to camera
+    shoulder_depth_diff = left_shoulder["z"] - right_shoulder["z"]
+
+    # Check if supine (lying down) - hips higher than shoulders in y
+    avg_shoulder_y = (left_shoulder["y"] + right_shoulder["y"]) / 2
+    avg_hip_y = (left_hip["y"] + right_hip["y"]) / 2
+    if avg_hip_y < avg_shoulder_y - 0.15:
+        return "supine"
+
+    # Side view: shoulders appear close together horizontally
+    # When facing sideways, shoulder width is very small
+    if shoulder_width < 0.15:
+        # Use z-depth to determine which side is facing camera
+        return "side_left" if shoulder_depth_diff > 0 else "side_right"
+
+    return "front"
+
 
 class YogaPoseRecognizer:
     """Recognize yoga poses from detected landmarks"""
@@ -189,7 +258,9 @@ class YogaPoseRecognizer:
 
         return best_match, best_confidence
 
-    def evaluate_target_pose(self, landmarks: list[dict], target_pose: str) -> tuple[float, dict]:
+    def evaluate_target_pose(
+        self, landmarks: list[dict], target_pose: str
+    ) -> tuple[float | None, dict, str, bool]:
         """
         Evaluate how well current pose matches a specific target pose.
 
@@ -198,15 +269,30 @@ class YogaPoseRecognizer:
             target_pose: Name of the target pose to evaluate against
 
         Returns:
-            Tuple of (confidence, angle_breakdown)
-            - confidence: Overall match score (0.0 to 1.0)
+            Tuple of (confidence, angle_breakdown, orientation, orientation_valid)
+            - confidence: Overall match score (0.0 to 1.0), or None if wrong orientation
             - angle_breakdown: Dict with per-joint comparison details
+            - orientation: Current user orientation ('front', 'side_left', etc.)
+            - orientation_valid: Whether user is in correct orientation for pose
         """
         if not landmarks or len(landmarks) < 33:
-            return 0.0, {}
+            return 0.0, {}, "front", True
+
+        # Detect current orientation
+        orientation = detect_orientation(landmarks)
+
+        # Check if orientation is valid for target pose
+        orientation_valid = True
+        if target_pose in POSE_ORIENTATIONS:
+            required_orientations = POSE_ORIENTATIONS[target_pose]
+            orientation_valid = orientation in required_orientations
+
+        # If wrong orientation, return None confidence to indicate can't score
+        if not orientation_valid:
+            return None, {}, orientation, False
 
         if target_pose not in self.reference_poses:
-            return 0.0, {}
+            return 0.0, {}, orientation, True
 
         # Calculate current pose angles
         current_angles = self._calculate_angles(landmarks)
@@ -241,7 +327,7 @@ class YogaPoseRecognizer:
                     "status": status,
                 }
 
-        return confidence, angle_breakdown
+        return confidence, angle_breakdown, orientation, orientation_valid
 
     def _calculate_angles(self, landmarks: list[dict]) -> dict[str, float]:
         """Calculate key joint angles from landmarks"""

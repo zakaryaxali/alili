@@ -5,9 +5,9 @@ import time
 import socketio
 from dotenv import load_dotenv
 
-from .pose_analysis import PoseQualityAnalyzer
+from .pose_analysis import PoseQualityAnalyzer, get_orientation_feedback
 from .pose_detection import PoseDetector, decode_base64_image
-from .pose_recognition import YogaPoseRecognizer
+from .pose_recognition import POSE_ORIENTATIONS, YogaPoseRecognizer
 from .services.gemini_analyzer import GeminiPoseAnalyzer
 
 # Load environment variables
@@ -97,16 +97,23 @@ async def video_frame(sid, data):
 
         # Choose between evaluation mode or recognition mode
         angle_breakdown = {}
+        orientation = "front"
+        orientation_valid = True
+
         if target_pose:
             # Evaluation mode: evaluate against target pose
-            confidence, angle_breakdown = pose_recognizer.evaluate_target_pose(
-                pose_result["landmarks"], target_pose
+            confidence, angle_breakdown, orientation, orientation_valid = (
+                pose_recognizer.evaluate_target_pose(pose_result["landmarks"], target_pose)
             )
             pose_name = target_pose
 
-            # Analyze pose quality for the target pose
+            # Generate feedback based on orientation validity
             feedback = []
-            if confidence > 0.0:
+            if not orientation_valid:
+                # Wrong orientation - provide guidance
+                required = POSE_ORIENTATIONS.get(target_pose, [])
+                feedback = [get_orientation_feedback(orientation, required)]
+            elif confidence is not None and confidence > 0.0:
                 feedback = pose_analyzer.analyze(target_pose, pose_result["landmarks"])
             else:
                 feedback = [
@@ -121,9 +128,15 @@ async def video_frame(sid, data):
             if pose_name != "Unknown":
                 feedback = pose_analyzer.analyze(pose_name, pose_result["landmarks"])
 
-        # Use Gemini for richer feedback (with caching)
+        # Use Gemini for richer feedback (with caching) - only when orientation is valid
         gemini_feedback = None
-        if gemini_analyzer and target_pose and confidence > 0.0:
+        if (
+            gemini_analyzer
+            and target_pose
+            and orientation_valid
+            and confidence is not None
+            and confidence > 0.0
+        ):
             gemini_feedback = await _get_gemini_feedback(
                 sid, image_base64, target_pose, confidence, angle_breakdown
             )
@@ -135,7 +148,9 @@ async def video_frame(sid, data):
         result = {
             "landmarks": pose_result["landmarks"],
             "poseName": pose_name,
-            "confidence": float(confidence),
+            "confidence": float(confidence) if confidence is not None else None,
+            "orientation": orientation,
+            "orientationValid": orientation_valid,
             "feedback": final_feedback,
             "timestamp": int(time.time() * 1000),
         }

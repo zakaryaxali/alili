@@ -142,7 +142,10 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
       // onResult
       (result: PoseDetectionResult) => {
         setLandmarks(result.landmarks);
-        setConfidence(result.confidence);
+        // Only update confidence if it's a valid number (not null from wrong orientation)
+        if (result.confidence !== null) {
+          setConfidence(result.confidence);
+        }
         setFeedback(result.feedback || []);
       },
       // onError

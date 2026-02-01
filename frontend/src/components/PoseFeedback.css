@@ -63,6 +63,38 @@
   border: 2px solid #ef4444;
 }
 
+.score-badge.poor {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 2px solid #9ca3af;
+}
+
+.score-badge.orientation-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 2px solid #f59e0b;
+}
+
+/* Orientation indicator */
+.orientation-indicator {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.orientation-indicator.valid {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.orientation-indicator.invalid {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
 .feedback-list {
   flex: 1;
   overflow-y: auto;
@@ -136,6 +168,16 @@
 
   .mobile-status-bar.needs-work {
     background-color: #ef4444;
+    color: white;
+  }
+
+  .mobile-status-bar.poor {
+    background-color: #6b7280;
+    color: white;
+  }
+
+  .mobile-status-bar.orientation-warning {
+    background-color: #f59e0b;
     color: white;
   }
 

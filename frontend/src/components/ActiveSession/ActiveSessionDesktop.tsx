@@ -48,7 +48,12 @@ const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionStat
   }
 
   const feedback = poseResult?.feedback || [];
-  const accuracy = poseResult ? Math.round(poseResult.confidence * 5) : null;
+  const accuracy =
+    poseResult?.confidence !== null && poseResult?.confidence !== undefined
+      ? Math.round(poseResult.confidence * 5)
+      : null;
+  const orientation = poseResult?.orientation;
+  const orientationValid = poseResult?.orientationValid ?? true;
 
   return (
     <div className="active-session-desktop">
@@ -85,6 +90,8 @@ const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionStat
           <PoseFeedback
             feedback={feedback}
             accuracy={accuracy}
+            orientation={orientation}
+            orientationValid={orientationValid}
           />
         </div>
 

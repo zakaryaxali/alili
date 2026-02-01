@@ -161,25 +161,41 @@ export function useActiveSession({
     }
   }, [showTransition, voiceEnabled, nextPose]);
 
-  // Voice: Speak feedback when confidence is low
+  // Voice: Speak feedback when confidence is low or orientation is wrong
   useEffect(() => {
     if (!voiceEnabled || !speechService.isSupported()) return;
     if (!poseResult?.feedback?.length) return;
-    if (poseResult.confidence >= 0.7) return;
+
+    // If orientation is invalid, speak the orientation guidance
+    if (poseResult.orientationValid === false) {
+      const firstFeedback = poseResult.feedback[0];
+      if (firstFeedback && firstFeedback !== lastSpokenFeedbackRef.current) {
+        speechService.speakFeedback(firstFeedback);
+        lastSpokenFeedbackRef.current = firstFeedback;
+      }
+      return;
+    }
+
+    // Normal flow: speak feedback when confidence is low
+    if (poseResult.confidence === null || poseResult.confidence >= 0.7) return;
 
     const firstFeedback = poseResult.feedback[0];
     if (firstFeedback && firstFeedback !== lastSpokenFeedbackRef.current) {
       speechService.speakFeedback(firstFeedback);
       lastSpokenFeedbackRef.current = firstFeedback;
     }
-  }, [poseResult?.feedback, poseResult?.confidence, voiceEnabled]);
+  }, [poseResult?.feedback, poseResult?.confidence, poseResult?.orientationValid, voiceEnabled]);
 
-  // Track scores for current pose
+  // Track scores for current pose - only when orientation is valid
   useEffect(() => {
-    if (poseResult?.confidence !== undefined) {
+    if (
+      poseResult?.confidence !== undefined &&
+      poseResult?.confidence !== null &&
+      poseResult?.orientationValid !== false
+    ) {
       addScore(poseResult.confidence);
     }
-  }, [poseResult?.confidence, addScore]);
+  }, [poseResult?.confidence, poseResult?.orientationValid, addScore]);
 
   // Reset score accumulator when pose changes
   useEffect(() => {

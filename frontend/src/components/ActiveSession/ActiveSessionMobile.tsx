@@ -71,7 +71,13 @@ const ActiveSessionMobile: React.FC<ActiveSessionMobileProps> = ({ sessionState 
           <div className="mobile-feedback">
             <PoseFeedback
               feedback={poseResult?.feedback || []}
-              accuracy={poseResult ? Math.round(poseResult.confidence * 5) : null}
+              accuracy={
+                poseResult?.confidence !== null && poseResult?.confidence !== undefined
+                  ? Math.round(poseResult.confidence * 5)
+                  : null
+              }
+              orientation={poseResult?.orientation}
+              orientationValid={poseResult?.orientationValid ?? true}
             />
           </div>
         </div>

@@ -1,5 +1,31 @@
 from .utils.geometry import calculate_angle
 
+# Orientation feedback messages for guiding user to correct position
+ORIENTATION_MESSAGES: dict[str, str] = {
+    "side_left": "Turn sideways to the camera",
+    "side_right": "Turn sideways to the camera",
+    "front": "Face the camera",
+    "supine": "Lie down facing the camera",
+}
+
+
+def get_orientation_feedback(_current: str, required: list[str]) -> str:
+    """
+    Generate feedback message for incorrect orientation.
+
+    Args:
+        current: Current user orientation
+        required: List of acceptable orientations for the pose
+
+    Returns:
+        Feedback message guiding user to correct position
+    """
+    if not required:
+        return ""
+
+    target = required[0]  # Primary required orientation
+    return ORIENTATION_MESSAGES.get(target, f"Adjust your position for {target} view")
+
 
 class PoseQualityAnalyzer:
     """Analyze pose quality and provide feedback"""

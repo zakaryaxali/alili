@@ -1,6 +1,6 @@
 """Tests for pose_recognition module."""
 
-from app.pose_recognition import YogaPoseRecognizer
+from app.pose_recognition import YogaPoseRecognizer, detect_orientation, POSE_ORIENTATIONS
 
 
 class TestYogaPoseRecognizerInit:
@@ -79,35 +79,41 @@ class TestEvaluateTargetPose:
     """Tests for the evaluate_target_pose method."""
 
     def test_returns_tuple(self, sample_landmarks):
-        """Should return tuple of (confidence, angle_breakdown)."""
+        """Should return tuple of (confidence, angle_breakdown, orientation, orientation_valid)."""
         recognizer = YogaPoseRecognizer()
         result = recognizer.evaluate_target_pose(sample_landmarks, "Mountain Pose")
 
         assert isinstance(result, tuple)
-        assert len(result) == 2
+        assert len(result) == 4
 
     def test_returns_zero_for_empty_landmarks(self):
         """Should return 0 for empty landmarks."""
         recognizer = YogaPoseRecognizer()
-        confidence, breakdown = recognizer.evaluate_target_pose([], "Mountain Pose")
+        confidence, breakdown, orientation, orientation_valid = recognizer.evaluate_target_pose(
+            [], "Mountain Pose"
+        )
 
         assert confidence == 0.0
         assert breakdown == {}
+        assert orientation == "front"
+        assert orientation_valid is True
 
     def test_returns_zero_for_unknown_pose(self, sample_landmarks):
         """Should return 0 for unknown target pose."""
         recognizer = YogaPoseRecognizer()
-        confidence, breakdown = recognizer.evaluate_target_pose(
+        confidence, breakdown, orientation, orientation_valid = recognizer.evaluate_target_pose(
             sample_landmarks, "Unknown Pose Name"
         )
 
         assert confidence == 0.0
         assert breakdown == {}
+        assert orientation in {"front", "side_left", "side_right", "supine"}
+        assert orientation_valid is True
 
     def test_angle_breakdown_has_joint_details(self, sample_landmarks):
         """Angle breakdown should have details for each joint."""
         recognizer = YogaPoseRecognizer()
-        _, breakdown = recognizer.evaluate_target_pose(sample_landmarks, "Mountain Pose")
+        _, breakdown, _, _ = recognizer.evaluate_target_pose(sample_landmarks, "Mountain Pose")
 
         assert len(breakdown) > 0
 
@@ -120,7 +126,7 @@ class TestEvaluateTargetPose:
     def test_status_values_are_valid(self, sample_landmarks):
         """Status should be one of good, needs_improvement, or poor."""
         recognizer = YogaPoseRecognizer()
-        _, breakdown = recognizer.evaluate_target_pose(sample_landmarks, "Mountain Pose")
+        _, breakdown, _, _ = recognizer.evaluate_target_pose(sample_landmarks, "Mountain Pose")
 
         valid_statuses = {"good", "needs_improvement", "poor"}
         for _joint, details in breakdown.items():
@@ -129,12 +135,28 @@ class TestEvaluateTargetPose:
     def test_high_confidence_for_matching_pose(self, warrior_ii_left_landmarks):
         """Should have higher confidence when landmarks match target pose."""
         recognizer = YogaPoseRecognizer()
-        confidence, _ = recognizer.evaluate_target_pose(
+        confidence, _, _, _ = recognizer.evaluate_target_pose(
             warrior_ii_left_landmarks, "Warrior II Left"
         )
 
         # Fixture is designed to represent Warrior II Left
         assert confidence > 0.5
+
+    def test_returns_orientation(self, sample_landmarks):
+        """Should return detected orientation."""
+        recognizer = YogaPoseRecognizer()
+        _, _, orientation, _ = recognizer.evaluate_target_pose(sample_landmarks, "Mountain Pose")
+
+        assert orientation in {"front", "side_left", "side_right", "supine"}
+
+    def test_returns_orientation_valid(self, sample_landmarks):
+        """Should return whether orientation is valid for pose."""
+        recognizer = YogaPoseRecognizer()
+        _, _, _, orientation_valid = recognizer.evaluate_target_pose(
+            sample_landmarks, "Mountain Pose"
+        )
+
+        assert isinstance(orientation_valid, bool)
 
 
 class TestCalculateAngles:
@@ -256,10 +278,88 @@ class TestPosesWithFixtures:
         """Different landmarks should have different confidence for same target."""
         recognizer = YogaPoseRecognizer()
 
-        warrior_conf, _ = recognizer.evaluate_target_pose(
+        warrior_conf, _, _, _ = recognizer.evaluate_target_pose(
             warrior_ii_left_landmarks, "Warrior II Left"
         )
-        standing_conf, _ = recognizer.evaluate_target_pose(sample_landmarks, "Warrior II Left")
+        standing_conf, _, _, _ = recognizer.evaluate_target_pose(
+            sample_landmarks, "Warrior II Left"
+        )
 
         # Warrior II landmarks should match Warrior II better than standing
         assert warrior_conf >= standing_conf
+
+
+class TestDetectOrientation:
+    """Tests for the detect_orientation function."""
+
+    def test_returns_front_for_empty_landmarks(self):
+        """Should return front for empty landmarks."""
+        orientation = detect_orientation([])
+        assert orientation == "front"
+
+    def test_returns_front_for_insufficient_landmarks(self):
+        """Should return front if fewer than 33 landmarks."""
+        landmarks = [{"x": 0.5, "y": 0.5, "z": 0.0, "visibility": 0.9}] * 20
+        orientation = detect_orientation(landmarks)
+        assert orientation == "front"
+
+    def test_returns_valid_orientation(self, sample_landmarks):
+        """Should return a valid orientation value."""
+        orientation = detect_orientation(sample_landmarks)
+        assert orientation in {"front", "side_left", "side_right", "supine"}
+
+    def test_front_facing_landmarks_return_front(self, sample_landmarks):
+        """Landmarks with wide shoulder width should detect as front."""
+        # sample_landmarks has shoulders at x=0.4 and x=0.6, width=0.2 > 0.15
+        orientation = detect_orientation(sample_landmarks)
+        assert orientation == "front"
+
+    def test_side_view_narrow_shoulders(self):
+        """Shoulders close together horizontally should detect as side view."""
+        landmarks = [{"x": 0.5, "y": 0.5, "z": 0.0, "visibility": 0.9}] * 33
+        # Left shoulder (11) and right shoulder (12) very close in x
+        landmarks[11] = {"x": 0.5, "y": 0.3, "z": 0.1, "visibility": 0.9}
+        landmarks[12] = {"x": 0.52, "y": 0.3, "z": -0.1, "visibility": 0.9}
+        # Hips
+        landmarks[23] = {"x": 0.5, "y": 0.6, "z": 0.0, "visibility": 0.9}
+        landmarks[24] = {"x": 0.52, "y": 0.6, "z": 0.0, "visibility": 0.9}
+
+        orientation = detect_orientation(landmarks)
+        # Width is 0.02 < 0.15, left z > right z, so side_left
+        assert orientation == "side_left"
+
+
+class TestPoseOrientations:
+    """Tests for POSE_ORIENTATIONS configuration."""
+
+    def test_all_known_poses_have_orientations(self):
+        """All poses in the recognizer should have orientation requirements."""
+        recognizer = YogaPoseRecognizer()
+        for pose_name in recognizer.reference_poses:
+            assert (
+                pose_name in POSE_ORIENTATIONS
+            ), f"{pose_name} missing from POSE_ORIENTATIONS"
+
+    def test_orientations_are_valid_values(self):
+        """All orientation values should be valid."""
+        valid_orientations = {"front", "side_left", "side_right", "supine"}
+        for pose_name, orientations in POSE_ORIENTATIONS.items():
+            assert isinstance(orientations, list), f"{pose_name} orientations not a list"
+            for ori in orientations:
+                assert ori in valid_orientations, f"{pose_name} has invalid orientation: {ori}"
+
+    def test_side_view_poses_require_side(self):
+        """Side view poses should require side orientations."""
+        side_poses = ["Downward Dog", "Plank", "Reverse Table Top"]
+        for pose in side_poses:
+            orientations = POSE_ORIENTATIONS.get(pose, [])
+            assert any(
+                o in orientations for o in ["side_left", "side_right"]
+            ), f"{pose} should require side view"
+
+    def test_front_view_poses_require_front(self):
+        """Front view poses should require front orientation."""
+        front_poses = ["Mountain Pose", "Warrior II Left", "Tree Pose Left"]
+        for pose in front_poses:
+            orientations = POSE_ORIENTATIONS.get(pose, [])
+            assert "front" in orientations, f"{pose} should require front view"
