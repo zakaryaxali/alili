@@ -142,12 +142,24 @@ export function useActiveSession({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Voice: Announce pose changes
+  // Voice: Announce first pose on session start (after session start message)
   useEffect(() => {
-    if (voiceEnabled && speechService.isSupported() && !showTransition) {
-      speechService.speakPoseTransition(currentPose.pose_name, currentPose.duration);
+    if (voiceEnabled && speechService.isSupported() && currentPoseIndex === 0) {
+      // Delay slightly so it plays after "Starting your yoga session..." message
+      const timer = setTimeout(() => {
+        speechService.speakPoseTransition(currentPose.pose_name, currentPose.duration);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-  }, [currentPoseIndex, voiceEnabled, showTransition, currentPose.pose_name, currentPose.duration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Voice: Announce next pose when transition starts
+  useEffect(() => {
+    if (voiceEnabled && speechService.isSupported() && showTransition && nextPose) {
+      speechService.speakPoseTransition(nextPose.pose_name, nextPose.duration);
+    }
+  }, [showTransition, voiceEnabled, nextPose]);
 
   // Voice: Speak feedback when confidence is low
   useEffect(() => {
