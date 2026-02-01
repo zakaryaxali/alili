@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { getScoreLabel } from '../utils/scoreClassification';
 import type { YogaSession } from '../types/session';
 import type { PoseScore } from './ActiveSession';
@@ -7,9 +8,18 @@ interface SessionCompleteProps {
   session: YogaSession | null;
   poseScores: PoseScore[];
   onNewSession: () => void;
+  onSessionComplete?: () => void;
 }
 
-const SessionComplete: React.FC<SessionCompleteProps> = ({ session, poseScores, onNewSession }) => {
+const SessionComplete: React.FC<SessionCompleteProps> = ({ session, poseScores, onNewSession, onSessionComplete }) => {
+  const hasCalledRef = useRef(false);
+
+  useEffect(() => {
+    if (onSessionComplete && !hasCalledRef.current) {
+      hasCalledRef.current = true;
+      onSessionComplete();
+    }
+  }, [onSessionComplete]);
   const getScoreLabelForDisplay = (score: number) => {
     const rounded = Math.round(score * 5);
     return getScoreLabel(rounded);

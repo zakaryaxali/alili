@@ -43,4 +43,11 @@ export interface BodyPartSelection {
   category: BodyPartCategory;
 }
 
-export type SessionScreen = 'selector' | 'config' | 'active' | 'complete';
+export type SessionScreen =
+  | 'welcome'
+  | 'camera-setup'
+  | 'tutorial'
+  | 'selector'
+  | 'config'
+  | 'active'
+  | 'complete';
