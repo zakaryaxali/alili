@@ -5,6 +5,7 @@ import { PoseWebSocketService } from '../../services/websocket';
 import type { PoseDetectionResult, Landmark } from '../../types/pose';
 import PoseOverlay from '../PoseOverlay';
 import PoseFeedback from '../PoseFeedback';
+import OrientationBadge from '../OrientationBadge';
 import './Tutorial.css';
 
 interface TutorialProps {
@@ -48,6 +49,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
   const [confidence, setConfidence] = useState(0);
   const [feedback, setFeedback] = useState<string[]>([]);
+  const [orientationValid, setOrientationValid] = useState(true);
   const [videoDimensions, setVideoDimensions] = useState({ width: 640, height: 480 });
   const { speak, stop: stopSpeech } = useSpeech();
 
@@ -147,6 +149,7 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
           setConfidence(result.confidence);
         }
         setFeedback(result.feedback || []);
+        setOrientationValid(result.orientationValid);
       },
       // onError
       (errorMsg: string) => {
@@ -289,10 +292,17 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
           {/* Header Overlay */}
           <div className="tutorial-header-overlay">
             <div className="tutorial-pose-info">
-              <span className="tutorial-pose-name">Mountain Pose</span>
+              <div className="tutorial-pose-name-row">
+                <span className="tutorial-pose-name">Mountain Pose</span>
+                <OrientationBadge poseName="Mountain Pose" isValid={orientationValid} />
+              </div>
               <span className="tutorial-pose-subtitle">Practice Mode</span>
             </div>
-            <PoseFeedback feedback={feedback} accuracy={accuracy} />
+            <PoseFeedback
+              feedback={feedback}
+              accuracy={orientationValid ? accuracy : null}
+              orientationValid={orientationValid}
+            />
           </div>
 
           {/* Controls Overlay */}

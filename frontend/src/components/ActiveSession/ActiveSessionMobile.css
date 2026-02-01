@@ -95,6 +95,13 @@
   text-align: left;
 }
 
+.mobile-pose-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .mobile-pose-name {
   font-size: 1.1em;
   font-weight: 700;

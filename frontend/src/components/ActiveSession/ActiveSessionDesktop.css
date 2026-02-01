@@ -84,6 +84,12 @@
   gap: var(--spacing-xs);
 }
 
+.desktop-pose-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
 .desktop-pose-name {
   font-size: 1.5em;
   font-weight: 700;

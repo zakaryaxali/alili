@@ -1,0 +1,39 @@
+.orientation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.orientation-badge.valid {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.orientation-badge.invalid {
+  background-color: #f59e0b;
+  color: white;
+  animation: pulse-warning 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.orientation-badge-icon {
+  font-size: 14px;
+}
+
+.orientation-badge-label {
+  white-space: nowrap;
+}

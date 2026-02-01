@@ -3,6 +3,7 @@ import PoseOverlay from '../PoseOverlay';
 import PoseFeedback from '../PoseFeedback';
 import PoseTransition from '../PoseTransition';
 import SessionControls from '../SessionControls';
+import OrientationBadge from '../OrientationBadge';
 import { getPoseImage } from '../../utils/poseImages';
 import type { UseActiveSessionReturn } from '../../hooks/useActiveSession';
 import type { YogaSession } from '../../types/session';
@@ -52,7 +53,6 @@ const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionStat
     poseResult?.confidence !== null && poseResult?.confidence !== undefined
       ? Math.round(poseResult.confidence * 5)
       : null;
-  const orientation = poseResult?.orientation;
   const orientationValid = poseResult?.orientationValid ?? true;
 
   return (
@@ -82,7 +82,10 @@ const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionStat
         {/* Header overlay - pose info */}
         <div className="desktop-header-overlay">
           <div className="desktop-pose-info">
-            <span className="desktop-pose-name">{currentPose.pose_name}</span>
+            <div className="desktop-pose-name-row">
+              <span className="desktop-pose-name">{currentPose.pose_name}</span>
+              <OrientationBadge poseName={currentPose.pose_name} isValid={orientationValid} />
+            </div>
             <span className="desktop-pose-progress">
               {currentPoseIndex + 1}/{totalPoses} • {timeRemaining}s
             </span>
@@ -90,7 +93,6 @@ const ActiveSessionDesktop: React.FC<ActiveSessionDesktopProps> = ({ sessionStat
           <PoseFeedback
             feedback={feedback}
             accuracy={accuracy}
-            orientation={orientation}
             orientationValid={orientationValid}
           />
         </div>

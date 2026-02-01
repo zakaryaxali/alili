@@ -3,6 +3,7 @@ import PoseOverlay from '../PoseOverlay';
 import PoseFeedback from '../PoseFeedback';
 import PoseTransition from '../PoseTransition';
 import SessionControls from '../SessionControls';
+import OrientationBadge from '../OrientationBadge';
 import type { UseActiveSessionReturn } from '../../hooks/useActiveSession';
 import { getPoseImage } from '../../utils/poseImages';
 import './ActiveSession.shared.css';
@@ -63,7 +64,13 @@ const ActiveSessionMobile: React.FC<ActiveSessionMobileProps> = ({ sessionState 
         {/* Header overlay with pose info and feedback */}
         <div className="mobile-pose-header">
           <div className="mobile-pose-info">
-            <div className="mobile-pose-name">{currentPose.pose_name}</div>
+            <div className="mobile-pose-name-row">
+              <div className="mobile-pose-name">{currentPose.pose_name}</div>
+              <OrientationBadge
+                poseName={currentPose.pose_name}
+                isValid={poseResult?.orientationValid ?? true}
+              />
+            </div>
             <div className="mobile-pose-progress">
               Pose {currentPoseIndex + 1} of {totalPoses} • {timeRemaining}s
             </div>
@@ -76,7 +83,6 @@ const ActiveSessionMobile: React.FC<ActiveSessionMobileProps> = ({ sessionState 
                   ? Math.round(poseResult.confidence * 5)
                   : null
               }
-              orientation={poseResult?.orientation}
               orientationValid={poseResult?.orientationValid ?? true}
             />
           </div>

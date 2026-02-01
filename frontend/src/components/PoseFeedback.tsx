@@ -1,27 +1,16 @@
 import { memo } from 'react';
 import { getScoreClass, getScoreLabel } from '../utils/scoreClassification';
-import type { Orientation } from '../types/pose';
 import './PoseFeedback.css';
 
 interface PoseFeedbackProps {
   feedback: string[];
   accuracy: number | null;
-  orientation?: Orientation;
   orientationValid?: boolean;
 }
-
-// Map orientation to user-friendly label
-const ORIENTATION_LABELS: Record<Orientation, string> = {
-  front: 'Front view',
-  side_left: 'Side view',
-  side_right: 'Side view',
-  supine: 'Supine',
-};
 
 const PoseFeedback: React.FC<PoseFeedbackProps> = ({
   feedback,
   accuracy,
-  orientation,
   orientationValid = true,
 }) => {
   // Mobile-friendly short labels (visible from distance)
@@ -40,8 +29,6 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({
     return getScoreClass(accuracy);
   };
 
-  const orientationLabel = orientation ? ORIENTATION_LABELS[orientation] : undefined;
-
   return (
     <div className="pose-feedback">
       {/* Mobile: Simple colored status bar */}
@@ -52,13 +39,6 @@ const PoseFeedback: React.FC<PoseFeedbackProps> = ({
       {/* Desktop: Full detailed view */}
       <div className="desktop-feedback">
         <h3>Form Check</h3>
-
-        {/* Orientation indicator */}
-        {orientationLabel && (
-          <div className={`orientation-indicator ${orientationValid ? 'valid' : 'invalid'}`}>
-            {orientationLabel}
-          </div>
-        )}
 
         {/* Score display - show --/5 when orientation invalid */}
         <div className="accuracy-score">

@@ -333,6 +333,12 @@
   gap: var(--spacing-xs);
 }
 
+.tutorial-pose-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
 .tutorial-pose-name {
   font-size: 1.5em;
   font-weight: 700;
