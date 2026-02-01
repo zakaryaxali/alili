@@ -255,63 +255,54 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Practice Mode */
-.tutorial-practice {
-  padding: 20px;
+/* Practice Mode - Full Screen Layout (matching ActiveSessionDesktop) */
+.tutorial-practice-fullscreen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 50%, var(--color-primary) 100%);
+  padding: var(--spacing-lg);
+  gap: var(--spacing-lg);
+  box-sizing: border-box;
 }
 
-.tutorial-practice-content {
-  max-width: 1000px;
-  width: 100%;
-  text-align: center;
-}
-
-.tutorial-practice-content h2 {
-  color: #fff;
-  font-size: 1.8em;
-  font-weight: 700;
-  margin: 0 0 8px;
-}
-
-.tutorial-practice-subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1em;
-  margin: 0 0 24px;
-}
-
-.tutorial-practice-layout {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.tutorial-pose-reference {
+/* Left Sidebar */
+.tutorial-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
-  padding: 16px;
   backdrop-filter: blur(10px);
-}
-
-.tutorial-pose-reference h3 {
-  color: #fff;
-  font-size: 0.9em;
-  font-weight: 600;
-  margin: 0 0 12px;
-}
-
-.tutorial-pose-image {
-  width: 100%;
-  height: auto;
-  border-radius: var(--radius-sm);
-}
-
-.tutorial-camera-container {
-  position: relative;
-  background: #000;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
   overflow: hidden;
-  aspect-ratio: 16 / 9;
+}
+
+.tutorial-pose-reference-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+}
+
+/* Camera Container */
+.tutorial-camera-main {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: #000;
+}
+
+.tutorial-video-wrapper {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .tutorial-video {
@@ -321,66 +312,176 @@
   transform: scaleX(-1);
 }
 
-.tutorial-practice-feedback {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  margin-bottom: 24px;
-  backdrop-filter: blur(10px);
-}
-
-.tutorial-score {
+/* Header Overlay */
+.tutorial-header-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  padding: var(--spacing-lg) var(--spacing-xl);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 8px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-xl);
 }
 
-.tutorial-stars {
-  font-size: 1.8em;
-  letter-spacing: 4px;
+.tutorial-pose-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
-.tutorial-stars .star-filled {
-  color: #fbbf24;
-}
-
-.tutorial-stars .star-empty {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.tutorial-score-percent {
-  color: #fff;
-  font-size: 1.4em;
+.tutorial-pose-name {
+  font-size: 1.5em;
   font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.tutorial-feedback-text {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1em;
+.tutorial-pose-subtitle {
+  font-size: 1em;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* PoseFeedback styling in header overlay */
+.tutorial-header-overlay .pose-feedback {
+  background: transparent;
+  padding: 0;
+}
+
+.tutorial-header-overlay .mobile-status-bar {
+  display: none;
+}
+
+.tutorial-header-overlay .desktop-feedback {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+}
+
+.tutorial-header-overlay .desktop-feedback h3 {
+  margin: 0;
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.tutorial-header-overlay .accuracy-score {
   margin: 0;
 }
 
-.tutorial-complete-button {
-  padding: 20px 72px;
+.tutorial-header-overlay .score-badge {
+  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.tutorial-header-overlay .feedback-list {
+  max-width: 300px;
+}
+
+.tutorial-header-overlay .feedback-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.tutorial-header-overlay .feedback-list li {
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.tutorial-header-overlay .no-feedback {
+  margin: 0;
+  font-size: 0.85em;
+  color: #86efac;
+}
+
+/* Controls Overlay */
+.tutorial-controls-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  padding: var(--spacing-xl);
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+}
+
+.tutorial-ready-btn {
+  padding: var(--spacing-md) var(--spacing-2xl);
   background: rgba(255, 255, 255, 0.95);
   color: var(--color-primary);
   border: none;
   border-radius: var(--radius-md);
-  font-size: 1.5em;
+  font-size: 1.1em;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
-.tutorial-complete-button:hover {
+.tutorial-ready-btn:hover {
   background: #fff;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments for narrower screens */
+@media (max-width: 1200px) {
+  .tutorial-sidebar {
+    width: 250px;
+  }
+
+  .tutorial-pose-name {
+    font-size: 1.25em;
+  }
+
+  .tutorial-header-overlay .feedback-list {
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tutorial-sidebar {
+    width: 220px;
+    padding: var(--spacing-md);
+  }
+
+  .tutorial-header-overlay {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .tutorial-controls-overlay {
+    padding: var(--spacing-lg);
+  }
+
+  .tutorial-ready-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
 }
 
 @media (max-width: 768px) {
+  /* Tutorial steps responsive */
   .tutorial-step-title {
     font-size: 2.5em;
   }
@@ -422,32 +523,60 @@
     font-size: 1.4em;
   }
 
-  .tutorial-practice-layout {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  /* Practice mode responsive - stack sidebar above camera */
+  .tutorial-practice-fullscreen {
+    flex-direction: column;
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
   }
 
-  .tutorial-pose-reference {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .tutorial-pose-reference h3 {
-    margin: 0;
-  }
-
-  .tutorial-pose-image {
-    width: 80px;
-  }
-
-  .tutorial-camera-container {
-    aspect-ratio: 4 / 3;
-  }
-
-  .tutorial-complete-button {
+  .tutorial-sidebar {
     width: 100%;
-    padding: 16px 32px;
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .tutorial-pose-reference-img {
+    width: 80px;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .tutorial-camera-main {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .tutorial-header-overlay {
+    padding: var(--spacing-sm) var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .tutorial-pose-name {
     font-size: 1.1em;
+  }
+
+  .tutorial-pose-subtitle {
+    font-size: 0.85em;
+  }
+
+  .tutorial-header-overlay .desktop-feedback {
+    display: none;
+  }
+
+  .tutorial-header-overlay .mobile-status-bar {
+    display: block;
+  }
+
+  .tutorial-controls-overlay {
+    padding: var(--spacing-md);
+  }
+
+  .tutorial-ready-btn {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-md) var(--spacing-xl);
   }
 }
