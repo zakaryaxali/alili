@@ -85,8 +85,8 @@ class YogaPoseRecognizer:
                 "tolerance": 20,
             },
             "Easy Seat": {
-                "angles": {"left_knee": 90, "right_knee": 90, "left_hip": 90, "right_hip": 90},
-                "tolerance": 25,
+                "angles": {"left_knee": 55, "right_knee": 55, "left_hip": 85, "right_hip": 85},
+                "tolerance": 30,
             },
             "Seated Hands Behind Back Stretch": {
                 "angles": {
