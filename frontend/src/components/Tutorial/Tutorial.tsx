@@ -161,7 +161,9 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     speak('Practice time! Try holding the Mountain Pose for a few seconds. Match your body to the reference image.');
     connectSocket();
     await startCamera();
-  }, [connectSocket, startCamera, speak]);
+    // Start frame capture after camera is ready
+    startFrameCapture();
+  }, [connectSocket, startCamera, speak, startFrameCapture]);
 
   useEffect(() => {
     if (isPracticing && streamRef.current) {
