@@ -2,8 +2,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { getPoseImage } from '../../utils/poseImages';
 import { useSpeech } from '../../hooks/useSpeech';
 import { PoseWebSocketService } from '../../services/websocket';
-import type { PoseDetectionResult } from '../../types/pose';
+import type { PoseDetectionResult, Landmark } from '../../types/pose';
 import PoseOverlay from '../PoseOverlay';
+import PoseFeedback from '../PoseFeedback';
 import './Tutorial.css';
 
 interface TutorialProps {
@@ -44,7 +45,7 @@ const TUTORIAL_STEPS = [
 const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPracticing, setIsPracticing] = useState(false);
-  const [landmarks, setLandmarks] = useState<PoseDetectionResult['landmarks']>(null);
+  const [landmarks, setLandmarks] = useState<Landmark[] | null>(null);
   const [confidence, setConfidence] = useState(0);
   const [feedback, setFeedback] = useState<string[]>([]);
   const [videoDimensions, setVideoDimensions] = useState({ width: 640, height: 480 });
@@ -246,72 +247,55 @@ const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
     onComplete();
   };
 
-  const renderStars = (score: number) => {
-    const starCount = Math.round(score * 5);
-    return (
-      <span className="tutorial-stars">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <span key={i} className={i <= starCount ? 'star-filled' : 'star-empty'}>
-            ★
-          </span>
-        ))}
-      </span>
-    );
-  };
-
   if (isPracticing) {
+    const accuracy = Math.round(confidence * 5);
+
     return (
-      <div className="tutorial tutorial-practice">
-        <div className="tutorial-practice-content">
-          <h2>Try Mountain Pose</h2>
-          <p className="tutorial-practice-subtitle">
-            Practice with real-time feedback - no timer, no pressure!
-          </p>
+      <div className="tutorial tutorial-practice-fullscreen">
+        {/* Left Sidebar */}
+        <aside className="tutorial-sidebar">
+          <img
+            src={getPoseImage('Mountain Pose')}
+            alt="Mountain Pose"
+            className="tutorial-pose-reference-img"
+          />
+        </aside>
 
-          <div className="tutorial-practice-layout">
-            <div className="tutorial-pose-reference">
-              <h3>Target Pose</h3>
-              <img
-                src={getPoseImage('Mountain Pose')}
-                alt="Mountain Pose"
-                className="tutorial-pose-image"
+        {/* Camera Container */}
+        <div className="tutorial-camera-main">
+          <div className="tutorial-video-wrapper">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="tutorial-video"
+            />
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+            {landmarks && (
+              <PoseOverlay
+                landmarks={landmarks}
+                width={videoDimensions.width}
+                height={videoDimensions.height}
               />
-            </div>
-
-            <div className="tutorial-camera-container">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="tutorial-video"
-              />
-              <canvas ref={canvasRef} style={{ display: 'none' }} />
-              {landmarks && (
-                <PoseOverlay
-                  landmarks={landmarks}
-                  width={videoDimensions.width}
-                  height={videoDimensions.height}
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="tutorial-practice-feedback">
-            <div className="tutorial-score">
-              {renderStars(confidence)}
-              <span className="tutorial-score-percent">
-                {Math.round(confidence * 100)}%
-              </span>
-            </div>
-            {feedback.length > 0 && (
-              <p className="tutorial-feedback-text">{feedback[0]}</p>
             )}
           </div>
 
-          <button className="tutorial-complete-button" onClick={handleComplete}>
-            I'm Ready!
-          </button>
+          {/* Header Overlay */}
+          <div className="tutorial-header-overlay">
+            <div className="tutorial-pose-info">
+              <span className="tutorial-pose-name">Mountain Pose</span>
+              <span className="tutorial-pose-subtitle">Practice Mode</span>
+            </div>
+            <PoseFeedback feedback={feedback} accuracy={accuracy} />
+          </div>
+
+          {/* Controls Overlay */}
+          <div className="tutorial-controls-overlay">
+            <button className="tutorial-ready-btn" onClick={handleComplete}>
+              I'm Ready!
+            </button>
+          </div>
         </div>
       </div>
     );
